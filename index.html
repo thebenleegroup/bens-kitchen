@@ -158,6 +158,7 @@ body {
 .orgbtn:active { border-color:var(--lime); color:var(--lime); }
 .reset { border:1px solid var(--line); background:transparent; color:var(--mut); font-size:12px; padding:7px 12px; border-radius:9px; cursor:pointer; }
 .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px;}
+.claim-grid{grid-template-columns:1fr;}
 .schip{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:12px;background:rgba(255,255,255,.05);min-width:0;}
 .schip .sn{font-size:15px;font-weight:700;line-height:1.15;}
 .schip .sh{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -170,6 +171,8 @@ body {
 .schip.pend .sn{color:var(--mut);}
 .pend-x{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--mut);font-size:16px;line-height:1;cursor:pointer;padding:0;}
 .pend-x:active{background:rgba(255,107,107,.15);border-color:#FF6B6B;color:#FF6B6B;}
+.pend-ok{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--lime);background:transparent;color:var(--lime);font-size:14px;line-height:1;cursor:pointer;padding:0;margin-right:5px;font-weight:800;}
+.pend-ok:active{background:var(--lime);color:#0E1116;}
 .ava.gray img{filter:grayscale(1);} .ava.gray{filter:grayscale(1);opacity:.85;}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);}
 .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(380px,92vw);max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;z-index:50;box-shadow:0 20px 60px rgba(0,0,0,.5);}
@@ -425,29 +428,44 @@ function pendAva(s,pf){ var ph=pf&&pf.photo;
   var ch=(s.handle||"?").replace(/^@+/,"").charAt(0).toUpperCase()||"?";
   return '<span class="ava gray" style="width:40px;height:40px;background:#55606e;font-size:18px">'+esc(ch)+'</span>';
 }
+function sigAvaColor(s,pf){ var ph=pf&&pf.photo;
+  if(ph) return '<span class="ava ph" style="width:40px;height:40px;border-color:var(--lime)"><img src="'+ph+'" alt=""></span>';
+  var ch=((s.name||s.handle||"?")+"").replace(/^@+/,"").charAt(0).toUpperCase()||"?";
+  return '<span class="ava" style="width:40px;height:40px;background:var(--lime);font-size:18px">'+esc(ch)+'</span>';
+}
+function sigChip(evId,s){
+  var pf=photoForHandle(s.handle), nm=(pf&&pf.name)||s.name||s.handle, confirmed=(s.pending===false);
+  var ava=confirmed?sigAvaColor(s,pf):pendAva(s,pf);
+  var sub=confirmed?esc(s.handle):'<span style="color:#F4C542">Pending</span>';
+  var btns='';
+  if(ORGANIZER){
+    if(!confirmed) btns+='<button class="pend-ok" data-act="confirmSignup" data-event="'+esc(evId)+'" data-sid="'+esc(s._id)+'" data-handle="'+esc(s.handle)+'" aria-label="confirm">&#10003;</button>';
+    btns+='<button class="pend-x" data-act="unclaim" data-event="'+esc(evId)+'" data-sid="'+esc(s._id)+'" data-handle="'+esc(s.handle)+'" aria-label="remove">&#215;</button>';
+  }
+  return '<div class="schip'+(confirmed?'':' pend')+'">'+ava+'<div style="min-width:0;flex:1"><div class="sn">'+esc(nm)+'</div><div class="sh">'+sub+'</div></div>'+btns+'</div>';
+}
 function renderSchedule(){
   var Wk=SCHEDULE_WEEK, h='';
   h+='<div class="banner" style="border-left:0;background:var(--lime);color:#0E1116;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px"><span class="disp" style="font-size:26px">FULL THIS WEEK</span><span style="font-weight:700;text-align:right;line-height:1.2">Sign up below for<br>next week&#39;s games</span></div>';
   Wk.days.forEach(function(dd){
-    var confirmed=dd.players||[], pending=[], open=0, pill=dd.status, pillFull=(dd.status==="FULL");
+    var confirmed=dd.players||[], sConfirmed=[], sPending=[], open=0, pill=dd.status, pillFull=(dd.status==="FULL");
     if(dd.claim){
       var conKeys={}; confirmed.forEach(function(p){ conKeys[hkey(p.h)]=1; });
-      signupsFor(dd.id).forEach(function(s){ if(!conKeys[hkey(s.handle)]) pending.push(s); });
-      open=Math.max(0,(dd.cap||confirmed.length)-confirmed.length-pending.length);
-      pill=confirmed.length+"/"+(dd.cap||confirmed.length)+" IN"; pillFull=(open===0&&pending.length===0);
+      signupsFor(dd.id).forEach(function(s){ if(conKeys[hkey(s.handle)]) return; if(s.pending===false) sConfirmed.push(s); else sPending.push(s); });
+      var inCount=confirmed.length+sConfirmed.length, cap=(dd.cap||inCount);
+      open=Math.max(0,cap-inCount-sPending.length);
+      pill=inCount+"/"+cap+" IN"; pillFull=(open===0&&sPending.length===0);
     }
     h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span><span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
     h+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
     if(dd.note) h+='<div class="srain">'+esc(dd.note)+'</div>';
-    h+='<div class="sgrid">';
+    h+='<div class="sgrid'+(dd.claim?' claim-grid':'')+'">';
     confirmed.forEach(function(p){
       if(p.v){ h+='<div class="schip vac"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>'; }
       else { h+='<div class="schip">'+schedAva(p)+'<div style="min-width:0"><div class="sn">'+esc(p.n)+'</div><div class="sh">'+esc(p.h)+'</div></div></div>'; }
     });
-    pending.forEach(function(s){
-      var pf=photoForHandle(s.handle), nm=(pf&&pf.name)||s.name||s.handle;
-      h+='<div class="schip pend">'+pendAva(s,pf)+'<div style="min-width:0;flex:1"><div class="sn">'+esc(nm)+'</div><div class="sh" style="color:#F4C542">Pending</div></div>'+(ORGANIZER?'<button class="pend-x" data-act="unclaim" data-event="'+esc(dd.id)+'" data-sid="'+esc(s._id)+'" data-handle="'+esc(s.handle)+'" aria-label="remove">&#215;</button>':'')+'</div>';
-    });
+    sConfirmed.forEach(function(s){ h+=sigChip(dd.id,s); });
+    sPending.forEach(function(s){ h+=sigChip(dd.id,s); });
     for(var oi=0; oi<open; oi++){
       h+='<div class="schip vac" data-act="claim" data-event="'+esc(dd.id)+'"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>';
     }
@@ -638,6 +656,13 @@ document.addEventListener("click",function(e){
   else if(act==="orgToggle"){
     if(ORGANIZER){ if(confirm("Lock organizer tools on this device?")){ setOrganizer(false); render(); } }
     else { var code=prompt("Enter organizer code:"); if(code===null){} else if(code.trim()===ORG_CODE){ setOrganizer(true); render(); } else alert("Incorrect code."); }
+  }
+  else if(act==="confirmSignup"){
+    if(!ORGANIZER) return;
+    var cev=t.getAttribute("data-event"), csid=t.getAttribute("data-sid"), chn=t.getAttribute("data-handle")||"this player";
+    if(confirm("Mark "+chn+" as paid and confirmed?")){
+      if(SIGNUPS[cev]&&SIGNUPS[cev][csid]){ SIGNUPS[cev][csid].pending=false; _signupsJson=JSON.stringify(SIGNUPS); dbPutSignup(cev,csid,SIGNUPS[cev][csid]); if(tab==="schedule") renderSchedule(); }
+    }
   }
   else if(act==="unclaim"){
     if(!ORGANIZER) return;
