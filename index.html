@@ -162,6 +162,26 @@ body {
 .schip.vac{background:transparent;border:1px dashed var(--line);}
 .schip.vac .sn{color:var(--mut);font-weight:700;}
 .ava.vac{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:transparent;border:1px dashed #55606e;color:#55606e;font-size:22px;font-weight:400;flex:none;}
+.schip.vac[data-act]{cursor:pointer;}
+.schip.vac[data-act]:active{background:rgba(198,244,50,.08);border-color:var(--lime);}
+.schip.pend{background:rgba(255,255,255,.03);border:1px solid var(--line);}
+.schip.pend .sn{color:var(--mut);}
+.ava.gray img{filter:grayscale(1);} .ava.gray{filter:grayscale(1);opacity:.85;}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(380px,92vw);max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;z-index:50;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.m-h{font-family:'Anton',Impact,sans-serif;font-size:26px;color:var(--ink);line-height:1.05;}
+.m-sub{font-size:13px;color:var(--mut);margin-top:4px;}
+.m-lab{display:block;font-size:12px;color:var(--mut);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.05em;}
+.m-in{width:100%;box-sizing:border-box;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--ink);font-size:17px;padding:13px 14px;outline:none;}
+.m-in:focus{border-color:var(--lime);}
+.m-note{font-size:14px;color:var(--ink);line-height:1.5;margin:12px 0 4px;}
+.m-step{display:flex;gap:9px;align-items:flex-start;font-size:14px;color:var(--ink);line-height:1.45;margin-top:12px;}
+.m-num{flex:none;width:22px;height:22px;border-radius:50%;background:var(--lime);color:#0E1116;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.m-row{display:flex;gap:10px;margin-top:20px;}
+.m-btn{flex:1;border:0;border-radius:12px;background:var(--lime);color:#0E1116;font-weight:800;font-size:15px;padding:14px;cursor:pointer;}
+.m-btn.ghost{background:var(--panel2);color:var(--ink);}
+.m-btn.venmo{width:100%;background:#3D95CE;color:#fff;margin-top:10px;}
+.m-btn:active{filter:brightness(.93);}
 .srain{font-size:12px;color:var(--mut);margin:0 0 2px;}
 .spill{font-size:13px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:999px;border:2px solid var(--lime);color:var(--lime);}
 .spill.full{background:var(--ink);color:#0E1116;border-color:var(--ink);}
@@ -191,8 +211,8 @@ body {
 <div class="view" id="view"></div>
 <footer class="foot">
   <span class="fnote">Share the link. Anyone with it can log scores.</span>
-  <button class="reset" data-act="reset">Reset all scores</button>
 </footer>
+<div id="modalRoot" style="display:none"></div>
 
 <script>
 /* ============================================================
@@ -223,7 +243,7 @@ var SCHEDULE = [
 ];
 var TOTAL=SCHEDULE.reduce(function(a,rd){return a+rd.courts.length;},0);
 var SEASON_SESSIONS=5;
-var SCHEDULE_WEEK = {"title": "OCT 12-19", "full": true, "days": [{"day": "MON 10/12", "name": "MIXED DOUBLES", "venue": "La Cienega \u00b7 7-9pm", "note": "Cali Smash if it rains", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Jonathan", "h": "@jmfox1968"}]}, {"day": "TUE 10/13", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Anthony", "h": "@dragontoe99"}, {"n": "Jason", "h": "@odarrot_mod", "p": "Jason"}]}, {"day": "THU 10/15", "name": "DOUBLE ROUND ROBIN", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Justin", "h": "@ashedout", "p": "Justin"}, {"n": "Tyler", "h": "@tyorden", "p": "Tyler"}, {"n": "Jay Money", "h": "@jmoney_final", "p": "JayMoney"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Dre", "h": "@illydre"}]}, {"day": "MON 10/19", "name": "DOUBLE ROUND ROBIN", "venue": "La Cienega · 7-9pm", "status": "1/8 IN", "note": "7 spots open · DM @benlee.ig to claim one", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"v": true}, {"v": true}, {"v": true}, {"v": true}, {"v": true}, {"v": true}, {"v": true}]}]};
+var SCHEDULE_WEEK = {"title": "OCT 12-19", "full": true, "days": [{"day": "MON 10/12", "name": "MIXED DOUBLES", "venue": "La Cienega \u00b7 7-9pm", "note": "Cali Smash if it rains", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Jonathan", "h": "@jmfox1968"}]}, {"day": "TUE 10/13", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Anthony", "h": "@dragontoe99"}, {"n": "Jason", "h": "@odarrot_mod", "p": "Jason"}]}, {"day": "THU 10/15", "name": "DOUBLE ROUND ROBIN", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Justin", "h": "@ashedout", "p": "Justin"}, {"n": "Tyler", "h": "@tyorden", "p": "Tyler"}, {"n": "Jay Money", "h": "@jmoney_final", "p": "JayMoney"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Dre", "h": "@illydre"}]}, {"day": "MON 10/19", "name": "DOUBLE ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-19", "cap": 8, "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}]}]};
 var SEASON = [{"name": "Ben", "color": "#45D3E6", "w": 18, "l": 11, "diff": 57, "sessions": 4, "nw": 3}, {"name": "Stella", "color": "#C792EA", "w": 14, "l": 8, "diff": 9, "sessions": 3, "nw": 1.5}, {"name": "Brian", "color": "#FF6B6B", "w": 13, "l": 16, "diff": -31, "sessions": 4, "nw": 0}, {"name": "Jonathan", "color": "#C6F432", "w": 11, "l": 4, "diff": 51, "sessions": 2, "nw": 0.5}, {"name": "Jason", "color": "#7BB4FF", "w": 8, "l": 6, "diff": 12, "sessions": 2, "nw": 0}, {"name": "Joyce", "color": "#F7965A", "w": 8, "l": 15, "diff": -34, "sessions": 3, "nw": 0}, {"name": "Anthony", "color": "#FFD166", "w": 4, "l": 3, "diff": 1, "sessions": 1, "nw": 0}, {"name": "Jay", "color": "#7EE0A6", "w": 4, "l": 11, "diff": -44, "sessions": 2, "nw": 0}, {"name": "Dre", "color": "#4FD6B8", "w": 3, "l": 4, "diff": 2, "sessions": 1, "nw": 0}, {"name": "Dwayne", "color": "#B6E36A", "w": 3, "l": 4, "diff": -3, "sessions": 1, "nw": 0}, {"name": "Jade", "color": "#F79ACB", "w": 2, "l": 6, "diff": -20, "sessions": 1, "nw": 0}];
 
 function gid(r,c){return r+"c"+c;}
@@ -234,6 +254,7 @@ function clamp(n){return Math.max(0,Math.min(25,n));}
 var state={}, tab="schedule", saveTimers={};
 var HISTORY=[]; var BASE_SESSIONS=5; // sessions baked into the SEASON baseline before live uploads
 var pastOpen={}; // which Past Games rows are expanded
+var SIGNUPS={}; var _signupsJson=""; var claimState={}; // self-serve signups per event
 // database link can come from the share URL (#db=...) or the CONFIG above
 var _p = new URLSearchParams(location.search.slice(1));
 try { if(location.hash.slice(1)) new URLSearchParams(location.hash.slice(1)).forEach(function(v,k){_p.set(k,v);}); } catch(e){}
@@ -247,6 +268,15 @@ function dbGetKey(key){ if(!DB) return Promise.resolve(null);
   return fetch(DB+"/"+key+".json").then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}); }
 function dbPutKey(key,val){ if(!DB) return Promise.resolve(false);
   return fetch(DB+"/"+key+".json",{method:"PUT",body:JSON.stringify(val)}).then(function(r){return r.ok;}).catch(function(){return false;}); }
+// ---- Self-serve signups ----
+function hkey(h){ return (h||"").toLowerCase().replace(/^@+/,"").replace(/\s+/g,"").trim(); }
+function photoForHandle(h){ var k=hkey(h); if(!k) return null;
+  for(var n in PLAYERS){ if(hkey(PLAYERS[n].handle)===k) return {name:n, photo:PHOTOS[n]||null}; }
+  return null; }
+function signupsFor(ev){ var o=SIGNUPS[ev]||{}, a=[]; for(var id in o){ var s=o[id]; s._id=id; a.push(s); } a.sort(function(x,y){return (x.ts||0)-(y.ts||0);}); return a; }
+function loadSignups(cb){ dbGetKey("signups").then(function(s){ SIGNUPS=s||{}; _signupsJson=JSON.stringify(SIGNUPS); if(cb) cb(); }); }
+function dbPutSignup(ev,id,obj){ if(!DB) return Promise.resolve(false);
+  return fetch(DB+"/signups/"+encodeURIComponent(ev)+"/"+id+".json",{method:"PUT",body:JSON.stringify(obj)}).then(function(r){return r.ok;}).catch(function(){return false;}); }
 
 function avatar(name,size){ var p=PLAYERS[name], ph=PHOTOS[name];
   if(ph) return '<span class="ava ph" style="width:'+size+'px;height:'+size+'px;border-color:'+p.color+'"><img src="'+ph+'" alt="'+esc(name)+'"></span>';
@@ -339,6 +369,7 @@ function renderGames(){
   var ok=allGamesDone();
   h+='<button class="upload'+(ok?'':' dim')+'" id="uploadBtn" data-act="upload">'+(ok?'&#9650; Upload tonight’s scores':'Log every game to upload')+'</button>';
   h+='<div class="uphint">Saves the night to the season standings and Past Games, then clears the board. Asks you to confirm.</div>';
+  h+='<div style="text-align:center;margin-top:14px"><button class="reset" data-act="reset">Reset all scores</button></div>';
   document.getElementById("view").innerHTML=h;
   for(var id in state) updateCard(id);
 }
@@ -379,23 +410,94 @@ function schedAva(p){ var ph=PHOTOS[p.p||p.n];
   if(ph) return '<span class="ava ph" style="width:40px;height:40px;border-color:var(--lime)"><img src="'+ph+'" alt="'+esc(p.n)+'"></span>';
   return '<span class="ava" style="width:40px;height:40px;background:var(--lime);font-size:18px">'+esc(p.n[0])+'</span>';
 }
+function pendAva(s,pf){ var ph=pf&&pf.photo;
+  if(ph) return '<span class="ava ph gray" style="width:40px;height:40px;border-color:#55606e"><img src="'+ph+'" alt="pending"></span>';
+  var ch=(s.handle||"?").replace(/^@+/,"").charAt(0).toUpperCase()||"?";
+  return '<span class="ava gray" style="width:40px;height:40px;background:#55606e;font-size:18px">'+esc(ch)+'</span>';
+}
 function renderSchedule(){
   var Wk=SCHEDULE_WEEK, h='';
-  h+='<div class="banner" style="border-left:0;background:var(--lime);color:#0E1116;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px"><span class="disp" style="font-size:26px">WE ARE NOW FULL!</span><span style="font-weight:700;text-align:right;line-height:1.2">Thank you for the<br>support this week</span></div>';
+  h+='<div class="banner" style="border-left:0;background:var(--lime);color:#0E1116;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px"><span class="disp" style="font-size:26px">FULL THIS WEEK</span><span style="font-weight:700;text-align:right;line-height:1.2">Sign up below for<br>next week&#39;s games</span></div>';
   Wk.days.forEach(function(dd){
-    h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span><span class="spill'+(dd.status==="FULL"?" full":"")+'">'+esc(dd.status)+'</span></div>';
+    var confirmed=dd.players||[], pending=[], open=0, pill=dd.status, pillFull=(dd.status==="FULL");
+    if(dd.claim){
+      var conKeys={}; confirmed.forEach(function(p){ conKeys[hkey(p.h)]=1; });
+      signupsFor(dd.id).forEach(function(s){ if(!conKeys[hkey(s.handle)]) pending.push(s); });
+      open=Math.max(0,(dd.cap||confirmed.length)-confirmed.length-pending.length);
+      pill=confirmed.length+"/"+(dd.cap||confirmed.length)+" IN"; pillFull=(open===0&&pending.length===0);
+    }
+    h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span><span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
     h+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
     if(dd.note) h+='<div class="srain">'+esc(dd.note)+'</div>';
     h+='<div class="sgrid">';
-    dd.players.forEach(function(p){
+    confirmed.forEach(function(p){
       if(p.v){ h+='<div class="schip vac"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>'; }
       else { h+='<div class="schip">'+schedAva(p)+'<div style="min-width:0"><div class="sn">'+esc(p.n)+'</div><div class="sh">'+esc(p.h)+'</div></div></div>'; }
     });
+    pending.forEach(function(s){
+      var pf=photoForHandle(s.handle), nm=(pf&&pf.name)||s.name||s.handle;
+      h+='<div class="schip pend">'+pendAva(s,pf)+'<div style="min-width:0"><div class="sn">'+esc(nm)+'</div><div class="sh" style="color:#F4C542">Pending</div></div></div>';
+    });
+    for(var oi=0; oi<open; oi++){
+      h+='<div class="schip vac" data-act="claim" data-event="'+esc(dd.id)+'"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>';
+    }
     h+='</div></div>';
   });
   h+='<div class="rules"><div style="font-size:20px;font-weight:800;color:var(--lime)">Venmo $6 to @benjamintwl to confirm your spot</div><div style="font-size:13px;color:var(--mut);margin-top:4px">Stay tuned for upcoming spots · DM @benlee.ig for the waitlist</div></div>';
   document.getElementById("view").innerHTML=h;
 }
+// ---- Claim a spot ----
+var VENMO_URL="https://venmo.com/benjamintwl";
+function dayById(id){ for(var i=0;i<SCHEDULE_WEEK.days.length;i++){ if(SCHEDULE_WEEK.days[i].id===id) return SCHEDULE_WEEK.days[i]; } return null; }
+function showModal(html){ var r=document.getElementById("modalRoot"); r.innerHTML='<div class="modal-bg" data-act="claimCancel"></div><div class="modal">'+html+'</div>'; r.style.display="block"; }
+function closeModal(){ var r=document.getElementById("modalRoot"); r.style.display="none"; r.innerHTML=""; }
+function openClaim(id){
+  var d=dayById(id); if(!d) return;
+  claimState={id:id};
+  showModal(
+    '<div class="m-h">Claim a spot</div>'+
+    '<div class="m-sub">'+esc(d.day)+' · '+esc(d.name)+'</div>'+
+    '<label class="m-lab">Your Instagram handle</label>'+
+    '<input id="claimHandle" class="m-in" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@yourhandle" value="@">'+
+    '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="claimNext">Continue</button></div>'
+  );
+  setTimeout(function(){ var i=document.getElementById("claimHandle"); if(i){ i.focus(); } },50);
+}
+function claimNext(){
+  var i=document.getElementById("claimHandle"); if(!i) return;
+  var raw=i.value||""; var k=hkey(raw);
+  if(!k){ i.style.borderColor="#FF6B6B"; return; }
+  var handle="@"+k; var pf=photoForHandle(handle);
+  claimState.handle=handle; claimState.known=!!pf; claimState.name=(pf&&pf.name)||"";
+  var msg = pf
+    ? 'We have your photo on file. One more step to lock it in.'
+    : 'We don’t have your photo yet. Screenshot your IG handle and profile pic and send it to <b>@benlee.ig</b> so we can add you. Then finish below.';
+  showModal(
+    '<div class="m-h">Almost in, '+esc(handle)+'</div>'+
+    '<div class="m-note">'+msg+'</div>'+
+    '<div class="m-step"><span class="m-num">1</span> Venmo <b>$6</b> to <b>@benjamintwl</b> to confirm your spot.</div>'+
+    '<button class="m-btn venmo" data-act="claimVenmo">Open Venmo</button>'+
+    '<div class="m-step" style="margin-top:14px"><span class="m-num">2</span> Add yourself to the roster. You’ll show as pending until Ben confirms.</div>'+
+    '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="claimAdd">Add me</button></div>'
+  );
+}
+function claimAdd(){
+  var ev=claimState.id, handle=claimState.handle; if(!ev||!handle){ closeModal(); return; }
+  var d=dayById(ev); var cap=(d&&d.cap)||99;
+  var confirmedKeys={}; (d&&d.players||[]).forEach(function(p){confirmedKeys[hkey(p.h)]=1;});
+  // prevent duplicate pending or claiming a confirmed handle
+  var existing=signupsFor(ev);
+  if(confirmedKeys[hkey(handle)] || existing.some(function(s){return hkey(s.handle)===hkey(handle);})){
+    closeModal(); alert("You’re already on the roster for this one."); return;
+  }
+  if(((d&&d.players||[]).length + existing.length) >= cap){ closeModal(); alert("This one just filled up. DM @benlee.ig for the waitlist."); return; }
+  var id=signupId(), obj={handle:handle, name:claimState.name||"", known:!!claimState.known, pending:true, ts:Date.now()};
+  if(!SIGNUPS[ev]) SIGNUPS[ev]={}; SIGNUPS[ev][id]=obj; _signupsJson=JSON.stringify(SIGNUPS);
+  dbPutSignup(ev,id,obj);
+  closeModal();
+  if(tab==="schedule") renderSchedule();
+}
+function signupId(){ return "s"+Date.now()+Math.floor(Math.random()*1000); }
 function nwFmt(n){ if(!n) return '-'; return (Math.round(n*10)/10).toString(); }
 function seasonSorted(){ return SEASON.slice().sort(function(x,y){return y.w-x.w||y.diff-x.diff||((y.nw||0)-(x.nw||0))||x.name.localeCompare(y.name);}); }
 function renderSeason(){
@@ -516,7 +618,13 @@ document.addEventListener("click",function(e){
   if(act==="tab"){
     tab=t.getAttribute("data-tab"); render();
     if(tab==="season"||tab==="past"){ loadSeasonHistory(function(){ if(tab==="season") renderSeason(); else if(tab==="past") renderPast(); }); }
+    if(tab==="schedule"){ loadSignups(function(){ if(tab==="schedule") renderSchedule(); }); }
   }
+  else if(act==="claim"){ openClaim(t.getAttribute("data-event")); }
+  else if(act==="claimNext"){ claimNext(); }
+  else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
+  else if(act==="claimAdd"){ claimAdd(); }
+  else if(act==="claimCancel"){ closeModal(); }
   else if(act==="upload"){ uploadNight(); }
   else if(act==="pastToggle"){
     var k=t.getAttribute("data-k"); pastOpen[k]=!pastOpen[k];
@@ -567,9 +675,11 @@ function poll(){
       if(rt>lt){ state[id]=remote[id]; changed=true; } }
     if(changed){ if(tab==="games"){ for(var id in state) updateCard(id); refreshFinale(); updateUploadBtn(); } else if(tab==="standings"){ renderStandings(); } updateCount(); }
   });
+  if(tab==="schedule"){ dbGetKey("signups").then(function(s){ var j=JSON.stringify(s||{}); if(j!==_signupsJson){ SIGNUPS=s||{}; _signupsJson=j; if(tab==="schedule") renderSchedule(); } }); }
 }
 setLive();
 loadSeasonHistory(function(){ if(tab==="season"||tab==="past") render(); });
+loadSignups(function(){ if(tab==="schedule") renderSchedule(); });
 dbGet().then(function(r){ if(r) state=r; render(); updateCount(); });
 setInterval(poll,3500);
 document.addEventListener("visibilitychange",function(){ if(!document.hidden) poll(); });
