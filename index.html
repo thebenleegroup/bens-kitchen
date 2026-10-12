@@ -154,6 +154,8 @@ body {
 .rtxt { font-size:12px; color:var(--mut); margin:10px 0 0; line-height:1.5; }
 .foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--line); flex-wrap:wrap; }
 .fnote { font-size:12px; color:var(--mut); }
+.orgbtn { border:1px solid var(--line); background:transparent; color:var(--mut); font-size:12px; padding:7px 12px; border-radius:9px; cursor:pointer; }
+.orgbtn:active { border-color:var(--lime); color:var(--lime); }
 .reset { border:1px solid var(--line); background:transparent; color:var(--mut); font-size:12px; padding:7px 12px; border-radius:9px; cursor:pointer; }
 .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px;}
 .schip{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:12px;background:rgba(255,255,255,.05);min-width:0;}
@@ -213,6 +215,7 @@ body {
 <div class="view" id="view"></div>
 <footer class="foot">
   <span class="fnote">Share the link. Anyone with it can log scores.</span>
+  <button class="orgbtn" id="orgBtn" data-act="orgToggle">Organizer</button>
 </footer>
 <div id="modalRoot" style="display:none"></div>
 
@@ -257,6 +260,9 @@ var state={}, tab="schedule", saveTimers={};
 var HISTORY=[]; var BASE_SESSIONS=5; // sessions baked into the SEASON baseline before live uploads
 var pastOpen={}; // which Past Games rows are expanded
 var SIGNUPS={}; var _signupsJson=""; var claimState={}; // self-serve signups per event
+var ORG_CODE="3071"; var ORGANIZER=false;
+try{ ORGANIZER=(localStorage.getItem("bk_org")===ORG_CODE); }catch(e){}
+function setOrganizer(v){ ORGANIZER=v; try{ if(v) localStorage.setItem("bk_org",ORG_CODE); else localStorage.removeItem("bk_org"); }catch(e){} var b=document.getElementById("orgBtn"); if(b) b.textContent=v?"Organizer ✓":"Organizer"; }
 // database link can come from the share URL (#db=...) or the CONFIG above
 var _p = new URLSearchParams(location.search.slice(1));
 try { if(location.hash.slice(1)) new URLSearchParams(location.hash.slice(1)).forEach(function(v,k){_p.set(k,v);}); } catch(e){}
@@ -373,7 +379,7 @@ function renderGames(){
   var ok=allGamesDone();
   h+='<button class="upload'+(ok?'':' dim')+'" id="uploadBtn" data-act="upload">'+(ok?'&#9650; Upload tonight’s scores':'Log every game to upload')+'</button>';
   h+='<div class="uphint">Saves the night to the season standings and Past Games, then clears the board. Asks you to confirm.</div>';
-  h+='<div style="text-align:center;margin-top:14px"><button class="reset" data-act="reset">Reset all scores</button></div>';
+  if(ORGANIZER) h+='<div style="text-align:center;margin-top:14px"><button class="reset" data-act="reset">Reset all scores</button></div>';
   document.getElementById("view").innerHTML=h;
   for(var id in state) updateCard(id);
 }
@@ -440,7 +446,7 @@ function renderSchedule(){
     });
     pending.forEach(function(s){
       var pf=photoForHandle(s.handle), nm=(pf&&pf.name)||s.name||s.handle;
-      h+='<div class="schip pend">'+pendAva(s,pf)+'<div style="min-width:0;flex:1"><div class="sn">'+esc(nm)+'</div><div class="sh" style="color:#F4C542">Pending</div></div><button class="pend-x" data-act="unclaim" data-event="'+esc(dd.id)+'" data-sid="'+esc(s._id)+'" data-handle="'+esc(s.handle)+'" aria-label="remove">&#215;</button></div>';
+      h+='<div class="schip pend">'+pendAva(s,pf)+'<div style="min-width:0;flex:1"><div class="sn">'+esc(nm)+'</div><div class="sh" style="color:#F4C542">Pending</div></div>'+(ORGANIZER?'<button class="pend-x" data-act="unclaim" data-event="'+esc(dd.id)+'" data-sid="'+esc(s._id)+'" data-handle="'+esc(s.handle)+'" aria-label="remove">&#215;</button>':'')+'</div>';
     });
     for(var oi=0; oi<open; oi++){
       h+='<div class="schip vac" data-act="claim" data-event="'+esc(dd.id)+'"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>';
@@ -629,7 +635,12 @@ document.addEventListener("click",function(e){
   else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
   else if(act==="claimAdd"){ claimAdd(); }
   else if(act==="claimCancel"){ closeModal(); }
+  else if(act==="orgToggle"){
+    if(ORGANIZER){ if(confirm("Lock organizer tools on this device?")){ setOrganizer(false); render(); } }
+    else { var code=prompt("Enter organizer code:"); if(code===null){} else if(code.trim()===ORG_CODE){ setOrganizer(true); render(); } else alert("Incorrect code."); }
+  }
   else if(act==="unclaim"){
+    if(!ORGANIZER) return;
     var ev=t.getAttribute("data-event"), sid=t.getAttribute("data-sid"), hn=t.getAttribute("data-handle")||"this spot";
     if(confirm("Remove "+hn+" from the roster?")){
       if(SIGNUPS[ev]) delete SIGNUPS[ev][sid]; _signupsJson=JSON.stringify(SIGNUPS);
@@ -650,6 +661,7 @@ document.addEventListener("click",function(e){
     if(side==="a") a=clamp(a+d); else b=clamp(b+d);
     onScore(id,a,b);
   } else if(act==="reset"){
+    if(!ORGANIZER) return;
     if(confirm("Clear all scores for everyone?")){ state={}; dbReset(); render(); updateCount(); }
   }
 });
@@ -690,6 +702,7 @@ function poll(){
   if(tab==="schedule"){ dbGetKey("signups").then(function(s){ var j=JSON.stringify(s||{}); if(j!==_signupsJson){ SIGNUPS=s||{}; _signupsJson=j; if(tab==="schedule") renderSchedule(); } }); }
 }
 setLive();
+(function(){ var b=document.getElementById("orgBtn"); if(b) b.textContent=ORGANIZER?"Organizer ✓":"Organizer"; })();
 loadSeasonHistory(function(){ if(tab==="season"||tab==="past") render(); });
 loadSignups(function(){ if(tab==="schedule") renderSchedule(); });
 dbGet().then(function(r){ if(r) state=r; render(); updateCount(); });
