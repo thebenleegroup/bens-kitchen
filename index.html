@@ -166,6 +166,8 @@ body {
 .schip.vac[data-act]:active{background:rgba(198,244,50,.08);border-color:var(--lime);}
 .schip.pend{background:rgba(255,255,255,.03);border:1px solid var(--line);}
 .schip.pend .sn{color:var(--mut);}
+.pend-x{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--mut);font-size:16px;line-height:1;cursor:pointer;padding:0;}
+.pend-x:active{background:rgba(255,107,107,.15);border-color:#FF6B6B;color:#FF6B6B;}
 .ava.gray img{filter:grayscale(1);} .ava.gray{filter:grayscale(1);opacity:.85;}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);}
 .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(380px,92vw);max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;z-index:50;box-shadow:0 20px 60px rgba(0,0,0,.5);}
@@ -277,6 +279,8 @@ function signupsFor(ev){ var o=SIGNUPS[ev]||{}, a=[]; for(var id in o){ var s=o[
 function loadSignups(cb){ dbGetKey("signups").then(function(s){ SIGNUPS=s||{}; _signupsJson=JSON.stringify(SIGNUPS); if(cb) cb(); }); }
 function dbPutSignup(ev,id,obj){ if(!DB) return Promise.resolve(false);
   return fetch(DB+"/signups/"+encodeURIComponent(ev)+"/"+id+".json",{method:"PUT",body:JSON.stringify(obj)}).then(function(r){return r.ok;}).catch(function(){return false;}); }
+function dbDelSignup(ev,id){ if(!DB) return Promise.resolve(false);
+  return fetch(DB+"/signups/"+encodeURIComponent(ev)+"/"+id+".json",{method:"DELETE"}).then(function(r){return r.ok;}).catch(function(){return false;}); }
 
 function avatar(name,size){ var p=PLAYERS[name], ph=PHOTOS[name];
   if(ph) return '<span class="ava ph" style="width:'+size+'px;height:'+size+'px;border-color:'+p.color+'"><img src="'+ph+'" alt="'+esc(name)+'"></span>';
@@ -436,7 +440,7 @@ function renderSchedule(){
     });
     pending.forEach(function(s){
       var pf=photoForHandle(s.handle), nm=(pf&&pf.name)||s.name||s.handle;
-      h+='<div class="schip pend">'+pendAva(s,pf)+'<div style="min-width:0"><div class="sn">'+esc(nm)+'</div><div class="sh" style="color:#F4C542">Pending</div></div></div>';
+      h+='<div class="schip pend">'+pendAva(s,pf)+'<div style="min-width:0;flex:1"><div class="sn">'+esc(nm)+'</div><div class="sh" style="color:#F4C542">Pending</div></div><button class="pend-x" data-act="unclaim" data-event="'+esc(dd.id)+'" data-sid="'+esc(s._id)+'" data-handle="'+esc(s.handle)+'" aria-label="remove">&#215;</button></div>';
     });
     for(var oi=0; oi<open; oi++){
       h+='<div class="schip vac" data-act="claim" data-event="'+esc(dd.id)+'"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>';
@@ -625,6 +629,14 @@ document.addEventListener("click",function(e){
   else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
   else if(act==="claimAdd"){ claimAdd(); }
   else if(act==="claimCancel"){ closeModal(); }
+  else if(act==="unclaim"){
+    var ev=t.getAttribute("data-event"), sid=t.getAttribute("data-sid"), hn=t.getAttribute("data-handle")||"this spot";
+    if(confirm("Remove "+hn+" from the roster?")){
+      if(SIGNUPS[ev]) delete SIGNUPS[ev][sid]; _signupsJson=JSON.stringify(SIGNUPS);
+      dbDelSignup(ev,sid);
+      if(tab==="schedule") renderSchedule();
+    }
+  }
   else if(act==="upload"){ uploadNight(); }
   else if(act==="pastToggle"){
     var k=t.getAttribute("data-k"); pastOpen[k]=!pastOpen[k];
