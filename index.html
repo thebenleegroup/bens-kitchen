@@ -170,6 +170,7 @@ body {
 .schip.vac[data-act]:active{background:rgba(198,244,50,.08);border-color:var(--lime);}
 .schip.pend{background:rgba(255,255,255,.03);border:1px solid var(--line);}
 .schip.pend .sn{color:var(--mut);}
+.pendtag{flex:none;font-size:11px;font-weight:800;color:#F4C542;background:rgba(244,197,66,.12);border:1px solid rgba(244,197,66,.3);padding:3px 9px;border-radius:999px;letter-spacing:.03em;}
 .pend-x{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--mut);font-size:16px;line-height:1;cursor:pointer;padding:0;}
 .pend-x:active{background:rgba(255,107,107,.15);border-color:#FF6B6B;color:#FF6B6B;}
 .pend-ok{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--lime);background:transparent;color:var(--lime);font-size:14px;line-height:1;cursor:pointer;padding:0;margin-right:5px;font-weight:800;}
@@ -292,6 +293,10 @@ function dbPutKey(key,val){ if(!DB) return Promise.resolve(false);
 function hkey(h){ return (h||"").toLowerCase().replace(/^@+/,"").replace(/\s+/g,"").trim(); }
 function photoForHandle(h){ var k=hkey(h); if(!k) return null;
   for(var n in PLAYERS){ if(hkey(PLAYERS[n].handle)===k) return {name:n, photo:PHOTOS[n]||null}; }
+  // also scan the weekly rosters, which carry handle + name + photo key for everyone else
+  var days=(SCHEDULE_WEEK&&SCHEDULE_WEEK.days)||[];
+  for(var d=0; d<days.length; d++){ var pls=days[d].players||[];
+    for(var i=0;i<pls.length;i++){ var p=pls[i]; if(p&&p.h&&hkey(p.h)===k) return {name:p.n, photo:PHOTOS[p.p||p.n]||null}; } }
   return null; }
 function signupsFor(ev){ var o=SIGNUPS[ev]||{}, a=[]; for(var id in o){ var s=o[id]; s._id=id; a.push(s); } a.sort(function(x,y){return (x.ts||0)-(y.ts||0);}); return a; }
 function loadSignups(cb){ dbGetKey("signups").then(function(s){ SIGNUPS=s||{}; _signupsJson=JSON.stringify(SIGNUPS); if(cb) cb(); }); }
@@ -445,13 +450,15 @@ function sigAvaColor(s,pf){ var ph=pf&&pf.photo;
 function sigChip(evId,s){
   var pf=photoForHandle(s.handle), nm=(pf&&pf.name)||s.name||s.handle, confirmed=(s.pending===false);
   var ava=confirmed?sigAvaColor(s,pf):pendAva(s,pf);
-  var sub=confirmed?esc(s.handle):'<span style="color:#F4C542">Pending</span>';
+  var dup=(hkey(nm)===hkey(s.handle)); // no name distinct from handle
+  var txt='<div style="min-width:0;flex:1"><div class="sn">'+esc(nm)+'</div>'+(dup?'':'<div class="sh">'+esc(s.handle)+'</div>')+'</div>';
+  var tag=confirmed?'':'<span class="pendtag">Pending</span>';
   var btns='';
   if(ORGANIZER){
     if(!confirmed) btns+='<button class="pend-ok" data-act="confirmSignup" data-event="'+esc(evId)+'" data-sid="'+esc(s._id)+'" data-handle="'+esc(s.handle)+'" aria-label="confirm">&#10003;</button>';
     btns+='<button class="pend-x" data-act="unclaim" data-event="'+esc(evId)+'" data-sid="'+esc(s._id)+'" data-handle="'+esc(s.handle)+'" aria-label="remove">&#215;</button>';
   }
-  return '<div class="schip'+(confirmed?'':' pend')+'">'+ava+'<div style="min-width:0;flex:1"><div class="sn">'+esc(nm)+'</div><div class="sh">'+sub+'</div></div>'+btns+'</div>';
+  return '<div class="schip'+(confirmed?'':' pend')+'">'+ava+txt+tag+btns+'</div>';
 }
 function renderSchedule(){
   var Wk=SCHEDULE_WEEK, h='';
@@ -494,18 +501,21 @@ function openClaim(id){
   showModal(
     '<div class="m-h">Claim a spot</div>'+
     '<div class="m-sub">'+esc(d.day)+' · '+esc(d.name)+'</div>'+
-    '<label class="m-lab">Your Instagram handle</label>'+
+    '<label class="m-lab">Your name</label>'+
+    '<input id="claimName" class="m-in" type="text" autocapitalize="words" autocorrect="off" placeholder="First name">'+
+    '<label class="m-lab" style="margin-top:14px">Your Instagram handle</label>'+
     '<input id="claimHandle" class="m-in" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@yourhandle" value="@">'+
     '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="claimNext">Continue</button></div>'
   );
-  setTimeout(function(){ var i=document.getElementById("claimHandle"); if(i){ i.focus(); } },50);
+  setTimeout(function(){ var i=document.getElementById("claimName"); if(i){ i.focus(); } },50);
 }
 function claimNext(){
   var i=document.getElementById("claimHandle"); if(!i) return;
   var raw=i.value||""; var k=hkey(raw);
   if(!k){ i.style.borderColor="#FF6B6B"; return; }
+  var ni=document.getElementById("claimName"); var typedName=(ni&&ni.value||"").trim();
   var handle="@"+k; var pf=photoForHandle(handle);
-  claimState.handle=handle; claimState.known=!!pf; claimState.name=(pf&&pf.name)||"";
+  claimState.handle=handle; claimState.known=!!pf; claimState.name=(pf&&pf.name)||typedName||"";
   var msg = pf
     ? 'We have your photo on file. One more step to lock it in.'
     : 'We don’t have your photo yet. Screenshot your IG handle and profile pic and send it to <b>@benlee.ig</b> so we can add you. Then finish below.';
