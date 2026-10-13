@@ -464,10 +464,20 @@ function sigChip(evId,s){
   }
   return '<div class="schip'+(confirmed?'':' pend')+'">'+ava+txt+tag+btns+'</div>';
 }
+function dayDate(dd){
+  if(dd.id && /^\d{4}-\d{2}-\d{2}$/.test(dd.id)){ var p=dd.id.split("-"); return new Date(+p[0],+p[1]-1,+p[2]); }
+  var m=(dd.day||"").match(/(\d{1,2})\/(\d{1,2})/);
+  if(m){ return new Date((new Date()).getFullYear(), +m[1]-1, +m[2]); }
+  return null;
+}
 function renderSchedule(){
   var Wk=SCHEDULE_WEEK, h='';
   h+='<div class="banner" style="border-left:0;background:var(--lime);color:#0E1116;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px"><span class="disp" style="font-size:26px">NEW GAME ADDED</span><span style="font-weight:700;text-align:right;line-height:1.2">Wednesday 7-9pm<br>sign up below</span></div>';
+  var today=new Date(); today.setHours(0,0,0,0);
+  var shown=0;
   Wk.days.forEach(function(dd){
+    var dt=dayDate(dd); if(dt && dt<today) return; // drop past days
+    shown++;
     var confirmed=dd.players||[], sConfirmed=[], sPending=[], open=0, pill=dd.status, pillFull=(dd.status==="FULL");
     if(dd.claim){
       var conKeys={}; confirmed.forEach(function(p){ conKeys[hkey(p.h)]=1; });
@@ -491,6 +501,7 @@ function renderSchedule(){
     }
     h+='</div></div>';
   });
+  if(!shown){ h+='<div class="court" style="margin-bottom:12px;text-align:center;color:var(--mut)"><div class="disp" style="font-size:22px;color:var(--ink)">No games on the calendar</div><div style="font-size:13px;margin-top:4px">New sessions will show up here. DM @benlee.ig to get on the next one.</div></div>'; }
   h+='<div class="rules"><div style="font-size:20px;font-weight:800;color:var(--lime)">Venmo $6 to @benjamintwl to confirm your spot</div><div style="font-size:13px;color:var(--mut);margin-top:4px">Stay tuned for upcoming spots · DM @benlee.ig for the waitlist</div></div>';
   document.getElementById("view").innerHTML=h;
 }
