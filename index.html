@@ -132,7 +132,9 @@ body {
 .ptop { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:14px 14px; cursor:pointer; }
 .phd { font-size:15px; font-weight:800; color:var(--ink); }
 .psub { font-size:12px; color:var(--mut); margin-top:2px; }
-.pwin { font-size:13px; font-weight:700; color:#F4C542; display:flex; align-items:center; gap:8px; white-space:nowrap; }
+.pwin { font-size:13px; font-weight:700; color:#F4C542; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.winwrap { display:inline-flex; align-items:center; gap:5px; }
+.winsep { color:var(--mut); margin:0 1px; }
 .pcar { color:var(--mut); font-size:10px; }
 .pbody { border-top:1px solid var(--line); padding:10px 14px 14px; }
 .pgames { display:flex; flex-direction:column; gap:7px; }
@@ -146,8 +148,10 @@ body {
 .pfin { margin-top:12px; border-top:1px dashed var(--line); padding-top:10px; }
 .pfin-h { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--mut); margin-bottom:6px; }
 .pnote { font-size:13px; color:var(--mut); font-style:italic; }
-.pfin-r { display:flex; justify-content:space-between; font-size:13px; color:var(--ink); padding:2px 0; }
+.pfin-r { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--ink); padding:4px 0; }
 .pfin-r span:last-child { color:var(--mut); }
+.pfin-left { display:inline-flex; align-items:center; gap:7px; }
+.pfin-rk { color:var(--mut); width:16px; }
 .rules { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px 16px; }
 .pbar { height:8px; background:var(--panel2); border:1px solid var(--line); border-radius:999px; overflow:hidden; }
 .pfill { height:100%; background:var(--lime); border-radius:999px; transition:width .3s; }
@@ -612,6 +616,10 @@ function uploadNight(){
   var who=winners.map(function(r){return r.name;}).join(" & ")||"nobody";
   alert("Saved. "+who+" took the night. Season standings updated and the night is in Past Games.");
 }
+function nameAva(name,size){ var ph=PHOTOS[name], col=(PLAYERS[name]&&PLAYERS[name].color)||'#8891a0';
+  if(ph) return '<span class="ava ph" style="width:'+size+'px;height:'+size+'px;border-color:'+col+'"><img src="'+ph+'" alt=""></span>';
+  return '<span class="ava" style="width:'+size+'px;height:'+size+'px;background:'+col+';font-size:'+Math.round(size*0.44)+'px">'+esc((name||'?').charAt(0).toUpperCase())+'</span>';
+}
 function renderPast(){
   var h='';
   if(!HISTORY.length){
@@ -621,12 +629,14 @@ function renderPast(){
   var items=HISTORY.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0);});
   items.forEach(function(s){
     var key=(s.ts||s.date)+'', open=!!pastOpen[key];
-    var win=(s.winners&&s.winners.length)?s.winners.join(" / "):"-";
+    var winHtml='';
+    if(s.winners&&s.winners.length){ s.winners.forEach(function(n,i){ winHtml+=(i?'<span class="winsep">/</span>':'')+nameAva(n,22)+'<span>'+esc(n)+'</span>'; }); }
+    else winHtml='<span>-</span>';
     h+='<div class="court past">'+
        '<div class="ptop" data-act="pastToggle" data-k="'+esc(key)+'">'+
          '<div><div class="phd">'+esc(fmtDate(s.date))+' &middot; '+esc(s.loc)+'</div>'+
          '<div class="psub">'+esc(s.label||'')+'</div></div>'+
-         '<div class="pwin">&#128081; '+esc(win)+'<span class="pcar">'+(open?'&#9650;':'&#9660;')+'</span></div>'+
+         '<div class="pwin">&#128081;<span class="winwrap">'+winHtml+'</span><span class="pcar">'+(open?'&#9650;':'&#9660;')+'</span></div>'+
        '</div>'+
        '<div class="pbody" style="display:'+(open?'block':'none')+'">'+pastBody(s)+'</div>'+
        '</div>';
@@ -650,7 +660,7 @@ function pastBody(s){
   }
   if(s.standings&&s.standings.length){
     h+='<div class="pfin"><div class="pfin-h">'+((s.games&&s.games.length)?'Final standings':'Winner')+'</div>';
-    s.standings.forEach(function(r,i){ h+='<div class="pfin-r"><span>'+(i+1)+'. '+esc(r.name)+'</span><span>'+r.w+'-'+r.l+' &middot; '+(r.diff>=0?'+':'')+r.diff+'</span></div>'; });
+    s.standings.forEach(function(r,i){ h+='<div class="pfin-r"><span class="pfin-left"><span class="pfin-rk">'+(i+1)+'.</span>'+nameAva(r.name,22)+'<span>'+esc(r.name)+'</span></span><span>'+r.w+'-'+r.l+' &middot; '+(r.diff>=0?'+':'')+r.diff+'</span></div>'; });
     h+='</div>';
   }
   return h;
