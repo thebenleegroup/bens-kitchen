@@ -553,11 +553,26 @@ function claimAdd(){
     closeModal(); alert("You’re already on the roster for this one."); return;
   }
   if(((d&&d.players||[]).length + existing.length) >= cap){ closeModal(); alert("This one just filled up. DM @benlee.ig for the waitlist."); return; }
+  if(!DB){ alert("Can’t reach the server right now. Check your connection and try again."); return; }
   var id=signupId(), obj={handle:handle, name:claimState.name||"", known:!!claimState.known, pending:true, ts:Date.now()};
-  if(!SIGNUPS[ev]) SIGNUPS[ev]={}; SIGNUPS[ev][id]=obj; _signupsJson=JSON.stringify(SIGNUPS);
-  dbPutSignup(ev,id,obj);
-  closeModal();
-  if(tab==="schedule") renderSchedule();
+  var btn=document.querySelector('[data-act="claimAdd"]'); if(btn){ btn.textContent="Saving…"; btn.disabled=true; }
+  dbPutSignup(ev,id,obj).then(function(ok){
+    if(ok){
+      if(!SIGNUPS[ev]) SIGNUPS[ev]={}; SIGNUPS[ev][id]=obj; _signupsJson=JSON.stringify(SIGNUPS);
+      if(tab==="schedule") renderSchedule();
+      claimDone(d,handle);
+    } else {
+      if(btn){ btn.textContent="Add me"; btn.disabled=false; }
+      alert("Couldn’t save your spot, likely a connection blip. Tap Add me to try again.");
+    }
+  });
+}
+function claimDone(d,handle){
+  showModal(
+    '<div class="m-h">You’re on the list!</div>'+
+    '<div class="m-note"><b>'+esc(handle)+'</b> is pending for '+esc(d.day)+' · '+esc(d.name)+'. Your spot locks in once Ben confirms your Venmo.</div>'+
+    '<div class="m-row"><button class="m-btn" data-act="claimCancel">Done</button></div>'
+  );
 }
 function signupId(){ return "s"+Date.now()+Math.floor(Math.random()*1000); }
 function nwFmt(n){ if(!n) return '-'; return (Math.round(n*10)/10).toString(); }
