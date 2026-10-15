@@ -595,7 +595,16 @@ function dayDate(dd){
 }
 function renderSchedule(){
   var Wk=SCHEDULE_WEEK, h='';
-  h+='<div class="banner" style="border-left:0;background:var(--lime);color:#0E1116;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px"><span class="disp" style="font-size:26px">NEW GAME ADDED</span><span style="font-weight:700;text-align:right;line-height:1.2">Wed 10/21 · Roxbury<br>sign up below</span></div>';
+  h+='<div class="banner" style="border-left:0;background:var(--lime);color:#0E1116;font-size:13px">'+
+     '<div class="disp" style="font-size:25px;line-height:1">NEXT WEEK&#8217;S GAMES ARE LIVE</div>'+
+     '<div style="font-weight:800;line-height:1.55;margin-top:8px">'+
+       'Mon &middot; La Cienega &middot; Double Round Robin &middot; <span style="background:#0E1116;color:var(--lime);padding:1px 7px;border-radius:999px">only 3 spots left</span><br>'+
+       'Tue &middot; Roxbury &middot; Firefight Tuesday<br>'+
+       'Wed &middot; Roxbury &middot; sign up<br>'+
+       'Thu &middot; La Cienega &middot; sign up'+
+     '</div>'+
+     '<div style="font-weight:600;margin-top:8px">Tap a night below and claim your spot.</div>'+
+   '</div>';
   var today=new Date(); today.setHours(0,0,0,0);
   var shown=0;
   Wk.days.forEach(function(dd){
