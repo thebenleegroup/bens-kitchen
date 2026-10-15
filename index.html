@@ -264,23 +264,33 @@ function pmeta(name){
     for(var d=0;d<days.length && !handle;d++){ var pls=days[d].players||[]; for(var j=0;j<pls.length;j++){ if(pls[j]&&pls[j].n===name){ handle=pls[j].h||''; break; } } } }
   return {color:color, handle:handle};
 }
+function dayUploaded(dd){ var dt=dayDate(dd); if(!dt) return false; var iso=isoDate(dt);
+  return HISTORY.some(function(h){ return h.date===iso; }); }
 function activeDay(){
   var days=(SCHEDULE_WEEK&&SCHEDULE_WEEK.days)||[]; if(!days.length) return null;
   var today=new Date(); today.setHours(0,0,0,0);
-  var todayD=null,nextD=null,lastPast=null;
-  days.forEach(function(dd){ var dt=dayDate(dd); if(!dt) return; dt.setHours(0,0,0,0);
-    var t=dt.getTime();
-    if(t===today.getTime()){ if(!todayD) todayD=dd; }
-    else if(dt>today){ if(!nextD || dayDate(nextD)>dt) nextD=dd; }
-    else { if(!lastPast || dayDate(lastPast)<dt) lastPast=dd; }
-  });
-  return todayD||nextD||lastPast||days[0];
+  var up=[]; days.forEach(function(dd){ var dt=dayDate(dd); if(!dt) return; dt.setHours(0,0,0,0); if(dt.getTime()>=today.getTime()) up.push({dd:dd,t:dt.getTime()}); });
+  up.sort(function(a,b){return a.t-b.t;});
+  // earliest session today-or-later that has NOT been uploaded yet (so after upload we auto-advance)
+  for(var i=0;i<up.length;i++){ if(!dayUploaded(up[i].dd)) return up[i].dd; }
+  if(up.length) return up[up.length-1].dd; // everything upcoming already uploaded
+  var lastPast=null; days.forEach(function(dd){ var dt=dayDate(dd); if(!dt) return; if(!lastPast || dayDate(lastPast)<dt) lastPast=dd; });
+  return lastPast||days[0];
 }
+// Everyone who has claimed a spot (confirmed OR pending) plus any base players.
 function activeRoster(day){
   var names=[], seen={};
-  (day.players||[]).forEach(function(p){ if(p&&p.n){ var k=hkey(p.h||p.n); if(!seen[k]){ seen[k]=1; names.push(p.n); } } });
-  if(day.claim){ signupsFor(day.id).forEach(function(s){ if(s.pending===false){ var k=hkey(s.handle); if(!seen[k]){ seen[k]=1; var pf=photoForHandle(s.handle); names.push((pf&&pf.name)||s.name||s.handle); } } }); }
+  ((day&&day.players)||[]).forEach(function(p){ if(p&&p.n){ var k=hkey(p.h||p.n); if(!seen[k]){ seen[k]=1; names.push(p.n); } } });
+  if(day&&day.claim){ signupsFor(day.id).forEach(function(s){ var k=hkey(s.handle); if(!seen[k]){ seen[k]=1; var pf=photoForHandle(s.handle); names.push((pf&&pf.name)||s.name||s.handle); } }); }
   return names;
+}
+// A roster is "full" when every spot is claimed (fixed-roster days are always full).
+function rosterFull(day){
+  if(!day) return false;
+  if(day.games && day.games.length) return true;
+  var P=activeRoster(day);
+  if(!day.claim) return P.length>0;
+  return day.cap ? (P.length>=day.cap) : (P.length>0);
 }
 function rrSchedule(P){
   var cyc=[ [[P[0],P[1]],[P[2],P[3]]], [[P[0],P[2]],[P[1],P[3]]], [[P[0],P[3]],[P[1],P[2]]] ];
@@ -291,9 +301,10 @@ function rrSchedule(P){
 }
 function buildSchedule(day){
   if(day && day.games && day.games.length) return day.games;
+  if(!rosterFull(day)) return []; // still filling -> PENDING
   var P=activeRoster(day||{});
-  if(P.length===4) return rrSchedule(P);
-  return [];
+  if(P.length===4) return rrSchedule(P); // standard 4-player format: 6 round-robin + finale (1+4 vs 2+3)
+  return []; // 8-player generator lands here next
 }
 function setTabLabel(t,x){ var b=document.querySelector('.tab[data-tab="'+t+'"]'); if(b) b.textContent=x; }
 function rebuildActive(){
@@ -301,12 +312,26 @@ function rebuildActive(){
   if(day){
     SCHEDULE=buildSchedule(day);
     TOTAL=SCHEDULE.reduce(function(a,rd){return a+rd.courts.length;},0);
-    var dt=dayDate(day);
-    SESSION={ date: dt?isoDate(dt):"", loc: venueLoc(day.venue), label: day.name||"" };
-    var lab=dt?fmtShort(dt):"";
-    setTabLabel("standings", lab?lab+" Lineup":"Lineup");
-    setTabLabel("games", lab?lab+" Games":"Games");
-  } else { SCHEDULE=[]; TOTAL=0; SESSION={}; }
+    var dt=dayDate(day), full=rosterFull(day);
+    SESSION={ date: dt?isoDate(dt):"", loc: venueLoc(day.venue), label: day.name||"",
+      state: SCHEDULE.length?"ready":(full?"finalizing":"pending"),
+      cap:(day.cap||0), have:activeRoster(day).length };
+    var lab=dt?fmtShort(dt):"", pend=(SESSION.state==="pending");
+    setTabLabel("standings", (lab?lab+" ":"")+"Lineup"+(pend?" · PENDING":""));
+    setTabLabel("games", (lab?lab+" ":"")+"Games"+(pend?" · PENDING":""));
+  } else { SCHEDULE=[]; TOTAL=0; SESSION={}; setTabLabel("standings","Lineup"); setTabLabel("games","Games"); }
+}
+function pendBadge(){ return '<div style="display:inline-block;background:#F4C542;color:#0E1116;font-weight:800;letter-spacing:2px;padding:7px 18px;border-radius:999px;font-size:19px;margin-bottom:12px">PENDING</div>'; }
+function pendingHTML(kind){
+  var dt=dayDate(ACTIVE_DAY||{}), when=dt?fmtShort(dt):"", lab=SESSION.label||"", loc=SESSION.loc||"", have=SESSION.have||0, cap=SESSION.cap||0;
+  return '<div class="empty">'+pendBadge()+
+    '<p>'+esc(when)+(lab?' · '+esc(lab):'')+'</p>'+
+    '<p class="sub">Roster is still filling'+(cap?' ('+have+' of '+cap+' in)':'')+'. '+(kind==="games"?'Matchups':'The lineup')+' lock in automatically the moment it fills.</p>'+
+    (loc?'<p class="sub">'+esc(loc)+'</p>':'')+'</div>';
+}
+function finalizingHTML(kind){
+  var dt=dayDate(ACTIVE_DAY||{}), when=dt?fmtShort(dt):"", lab=SESSION.label||"";
+  return '<div class="empty"><div class="ball">&#129352;</div><p>Roster is set'+(when?' for '+esc(when):'')+(lab?' · '+esc(lab):'')+'.</p><p class="sub">Matchups are being finalized and show up here shortly.</p></div>';
 }
 function gid(r,c){return r+"c"+c;}
 function isDone(g){return g && g.a!==g.b && (g.a>0||g.b>0);}
@@ -393,6 +418,8 @@ function playedCount(){ var p=0; SCHEDULE.forEach(function(rd){rd.courts.forEach
 function updateCount(){ document.getElementById("count").textContent=playedCount()+"/"+TOTAL; }
 
 function renderStandings(){
+  if(SESSION.state==="pending"){ document.getElementById("view").innerHTML=pendingHTML("lineup"); return; }
+  if(SESSION.state==="finalizing"){ document.getElementById("view").innerHTML=finalizingHTML("lineup"); return; }
   var rows=standings(), played=playedCount(), lead=rows[0], any=played>0, h="";
   if(any){
     h+='<div class="champ"><div class="champ-crown">&#128081;</div>'+avatar(lead.name,64)+
@@ -443,14 +470,13 @@ function finaleCardHTML(){
 function renderGames(){
   var h="";
   if(!SCHEDULE.length){
-    var dn=ACTIVE_DAY?(ACTIVE_DAY.day+' · '+(ACTIVE_DAY.name||'')):'';
-    h+='<div class="empty"><div class="ball">&#129352;</div><p>Matchups aren’t set yet'+(dn?' for '+esc(dn):'')+'.</p><p class="sub">Once the roster is locked, the games show up here to score.</p></div>';
-    document.getElementById("view").innerHTML=h; return;
+    document.getElementById("view").innerHTML = (SESSION.state==="pending") ? pendingHTML("games") : finalizingHTML("games");
+    return;
   }
   SCHEDULE.forEach(function(rd){
     h+='<div class="round">';
     if(rd.final){ h+=finaleCardHTML(); }
-    else { h+=gameCardHTML(gid(rd.r,1),'Game '+rd.r,'#C6F432',rd.courts[0][0],rd.courts[0][1],'','',null); }
+    else { h+=gameCardHTML(gid(rd.r,1),rd.label||('Game '+rd.r),'#C6F432',rd.courts[0][0],rd.courts[0][1],'','',null); }
     h+='</div>';
   });
   var ok=allGamesDone();
@@ -679,7 +705,11 @@ function uploadNight(){
   }
   if(!confirm("Final check: save "+SESSION.label+" at "+SESSION.loc+" on "+fmtDate(SESSION.date)+" and clear the scoreboard for the next night?")) return;
   var rows=standings(), winners=sessionWinners(rows);
-  var games=[]; SCHEDULE.forEach(function(rd){ var g=state[gid(rd.r,1)]; if(isDone(g)) games.push({a:rd.courts[0][0],b:rd.courts[0][1],sa:g.a,sb:g.b}); });
+  var ftm=finalTeams();
+  var games=[]; SCHEDULE.forEach(function(rd){ var g=state[gid(rd.r,1)]; if(!isDone(g)) return;
+    var A=rd.courts[0][0], B=rd.courts[0][1];
+    if(rd.final && ftm){ A=ftm[0]; B=ftm[1]; } // store the real finale teams, not the ?/? placeholder
+    games.push({a:A,b:B,sa:g.a,sb:g.b,fin:!!rd.final}); });
   var entry={date:SESSION.date,loc:SESSION.loc,label:SESSION.label,
     winners:winners.map(function(r){return r.name;}),
     standings:rows.map(function(r){return {name:r.name,w:r.w,l:r.l,diff:r.diff};}),
@@ -725,13 +755,38 @@ function renderPast(){
   });
   document.getElementById("view").innerHTML=h;
 }
+// Fill in a finale game that was stored with "?" placeholder teams, by re-seeding the night's regular games.
+function sessionFinaleTeams(games){
+  var t={};
+  function add(n){ if(!t[n]) t[n]={name:n,w:0,l:0,pf:0,pa:0}; }
+  (games||[]).forEach(function(g){
+    var A=g.a||[], B=g.b||[]; if(!A.length||!B.length) return;
+    if((A.join("")+B.join("")).indexOf("?")>=0) return; // skip the finale / placeholder itself
+    A.forEach(add); B.forEach(add); var aw=g.sa>g.sb;
+    A.forEach(function(p){ t[p].pf+=g.sa; t[p].pa+=g.sb; aw?t[p].w++:t[p].l++; });
+    B.forEach(function(p){ t[p].pf+=g.sb; t[p].pa+=g.sa; aw?t[p].l++:t[p].w++; });
+  });
+  var a=[]; for(var k in t){ t[k].diff=t[k].pf-t[k].pa; a.push(t[k]); }
+  a.sort(function(x,y){return y.w-x.w||y.diff-x.diff||y.pf-x.pf||x.name.localeCompare(y.name);});
+  if(a.length<4) return null;
+  return [[a[0].name,a[3].name],[a[1].name,a[2].name]];
+}
+function resolveGames(s){
+  var games=(s.games||[]); var ft=null;
+  return games.map(function(g){
+    var A=g.a||[], B=g.b||[], isPh=((A.join("")+B.join("")).indexOf("?")>=0);
+    if(isPh){ if(!ft) ft=sessionFinaleTeams(games); if(ft) return {a:ft[0],b:ft[1],sa:g.sa,sb:g.sb,fin:true}; }
+    return g;
+  });
+}
 function pastBody(s){
   var h='';
-  if(s.games&&s.games.length){
+  var gms=resolveGames(s);
+  if(gms&&gms.length){
     h+='<div class="pgames">';
-    s.games.forEach(function(g,i){
+    gms.forEach(function(g,i){
       var aw=g.sa>g.sb;
-      h+='<div class="pgrow"><span class="pg-n">'+(i+1)+'</span>'+
+      h+='<div class="pgrow"><span class="pg-n">'+(g.fin?'&#128081;':(i+1))+'</span>'+
          '<span class="pteam'+(aw?' win':'')+'">'+esc((g.a||[]).join(" + "))+'</span>'+
          '<span class="pscore">'+g.sa+'<span class="pdash">-</span>'+g.sb+'</span>'+
          '<span class="pteam r'+(!aw?' win':'')+'">'+esc((g.b||[]).join(" + "))+'</span></div>';
@@ -741,7 +796,7 @@ function pastBody(s){
     h+='<div class="pnote">Game-by-game scores weren’t recorded for this night.</div>';
   }
   if(s.standings&&s.standings.length){
-    h+='<div class="pfin"><div class="pfin-h">'+((s.games&&s.games.length)?'Final standings':'Winner')+'</div>';
+    h+='<div class="pfin"><div class="pfin-h">'+((gms&&gms.length)?'Final standings':'Winner')+'</div>';
     s.standings.forEach(function(r,i){ h+='<div class="pfin-r"><span class="pfin-left"><span class="pfin-rk">'+(i+1)+'.</span>'+nameAva(r.name,22)+'<span>'+esc(r.name)+'</span></span><span>'+r.w+'-'+r.l+' &middot; '+(r.diff>=0?'+':'')+r.diff+'</span></div>'; });
     h+='</div>';
   }
@@ -844,11 +899,16 @@ function poll(){
       if(rt>lt){ state[id]=remote[id]; changed=true; } }
     if(changed){ if(tab==="games"){ for(var id in state) updateCard(id); refreshFinale(); updateUploadBtn(); } else if(tab==="standings"){ renderStandings(); } updateCount(); }
   });
-  if(tab==="schedule"){ dbGetKey("signups").then(function(s){ var j=JSON.stringify(s||{}); if(j!==_signupsJson){ SIGNUPS=s||{}; _signupsJson=j; if(tab==="schedule") renderSchedule(); } }); }
+  if(tab==="schedule"||tab==="standings"||tab==="games"){
+    dbGetKey("signups").then(function(s){ var j=JSON.stringify(s||{}); if(j===_signupsJson) return; SIGNUPS=s||{}; _signupsJson=j;
+      if(tab==="schedule") renderSchedule();
+      else if(SESSION.state!=="ready") render(); // roster changed while we wait -> auto-refresh (fills PENDING into matchups)
+    });
+  }
 }
 setLive();
 (function(){ var b=document.getElementById("orgBtn"); if(b) b.textContent=ORGANIZER?"Organizer ✓":"Organizer"; })();
-loadSeasonHistory(function(){ if(tab==="season"||tab==="past") render(); });
+loadSeasonHistory(function(){ render(); }); // re-render once history is in so activeDay can skip uploaded nights
 loadSignups(function(){ if(tab==="schedule") renderSchedule(); });
 dbGet().then(function(r){ if(r) state=r; render(); updateCount(); });
 setInterval(poll,3500);
