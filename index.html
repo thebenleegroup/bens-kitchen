@@ -798,15 +798,15 @@ function nameAva(name,size){ var ph=PHOTOS[name], col=(PLAYERS[name]&&PLAYERS[na
 }
 // Group photos from 8-player round robins, newest first. Add new ones to the top.
 var GALLERY=[
-  {src:"photos/photo-3.jpg", title:"8-player round robin", sub:"Oct 19", tag:"Latest"},
-  {src:"photos/photo-2.jpg", title:"8-player round robin", sub:"Previous session"},
-  {src:"photos/photo-1.jpg", title:"8-player round robin", sub:"Earlier session"}
+  {src:"photos/photo-3.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jonathan", sub:"La Cienega \u00B7 Oct 19th", tag:"Latest"},
+  {src:"photos/photo-2.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jay Money", sub:"Roxbury \u00B7 Oct 15th"},
+  {src:"photos/photo-1.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Ben", sub:"La Cienega \u00B7 Oct 5th"}
 ];
 function renderPhotos(){
   var h='';
   GALLERY.forEach(function(p){
     h+='<div class="court photo">'+
-       '<a href="'+esc(p.src)+'" target="_blank" rel="noopener"><img src="'+esc(p.src)+'" alt="Group photo, '+esc(p.title)+'" loading="lazy" width="1200" height="1600"></a>'+
+       '<a href="'+esc(p.src)+'" target="_blank" rel="noopener"><img src="'+esc(p.src)+'" alt="Group photo, '+esc(p.sub||p.title)+'" loading="lazy" width="1200" height="1600"></a>'+
        '<div class="pcap"><div><div class="phd">'+esc(p.title)+'</div><div class="psub">'+esc(p.sub||'')+'</div></div>'+
        (p.tag?'<span class="ptag">'+esc(p.tag)+'</span>':'')+'</div>'+
        '</div>';
