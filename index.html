@@ -130,7 +130,8 @@ body {
 .uphint { font-size:12px; color:var(--mut); text-align:center; margin:8px 6px 2px; line-height:1.4; }
 .past { padding:0; overflow:hidden; }
 .photo { padding:0; overflow:hidden; }
-.photo a { display:block; background:var(--panel2); }
+.photo a { display:block; position:relative; background:var(--panel2); }
+.photo .crown { position:absolute; transform:translate(-50%,-88%) rotate(-8deg); font-size:clamp(26px,9vw,44px); line-height:1; pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)); }
 .photo img { display:block; width:100%; height:auto; aspect-ratio:3/4; object-fit:cover; }
 .photo .pcap { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 14px; }
 .photo .ptag { font-size:11px; font-weight:800; color:#0E1116; background:var(--lime); border-radius:999px; padding:3px 9px; white-space:nowrap; }
@@ -798,15 +799,15 @@ function nameAva(name,size){ var ph=PHOTOS[name], col=(PLAYERS[name]&&PLAYERS[na
 }
 // Group photos from 8-player round robins, newest first. Add new ones to the top.
 var GALLERY=[
-  {src:"photos/photo-3.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jonathan", sub:"La Cienega \u00B7 Oct 19th", tag:"Latest"},
-  {src:"photos/photo-2.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jay Money", sub:"Roxbury \u00B7 Oct 15th"},
-  {src:"photos/photo-1.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Ben", sub:"La Cienega \u00B7 Oct 5th"}
+  {src:"photos/photo-3.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jonathan", sub:"La Cienega \u00B7 Oct 19th", tag:"Latest", crown:[72.5,29]},
+  {src:"photos/photo-2.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jay Money", sub:"Roxbury \u00B7 Oct 15th", crown:[15.8,31]},
+  {src:"photos/photo-1.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Ben", sub:"La Cienega \u00B7 Oct 5th", crown:[48.3,24.6]}
 ];
 function renderPhotos(){
   var h='';
   GALLERY.forEach(function(p){
     h+='<div class="court photo">'+
-       '<a href="'+esc(p.src)+'" target="_blank" rel="noopener"><img src="'+esc(p.src)+'" alt="Group photo, '+esc(p.sub||p.title)+'" loading="lazy" width="1200" height="1600"></a>'+
+       '<a href="'+esc(p.src)+'" target="_blank" rel="noopener"><img src="'+esc(p.src)+'" alt="Group photo, '+esc(p.sub||p.title)+'" loading="lazy" width="1200" height="1600">'+(p.crown?'<span class="crown" style="left:'+p.crown[0]+'%;top:'+p.crown[1]+'%">&#128081;</span>':'')+'</a>'+
        '<div class="pcap"><div><div class="phd">'+esc(p.title)+'</div><div class="psub">'+esc(p.sub||'')+'</div></div>'+
        (p.tag?'<span class="ptag">'+esc(p.tag)+'</span>':'')+'</div>'+
        '</div>';
