@@ -209,6 +209,11 @@ body {
 .brow.sea .st.w{font-size:18px;}
 .brow.sea .n1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 @media (prefers-reduced-motion: reduce){ * { animation:none!important; transition:none!important; } }
+.claim-results{margin-top:10px;max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.claim-opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #262b33;border-radius:12px;background:#161a20;cursor:pointer}
+.claim-opt:active{background:#1f252e}
+.claim-opt.new{border-style:dashed;border-color:#3a414b}
+.claim-none{color:#8891a0;font-size:13px;padding:10px 2px}
 </style>
 </head>
 <body>
@@ -662,14 +667,64 @@ function openClaim(id){
   claimState={id:id};
   showModal(
     '<div class="m-h">Claim a spot</div>'+
-    '<div class="m-sub">'+esc(d.day)+' · '+esc(d.name)+'</div>'+
-    '<label class="m-lab">Your name</label>'+
-    '<input id="claimName" class="m-in" type="text" autocapitalize="words" autocorrect="off" placeholder="First name">'+
-    '<label class="m-lab" style="margin-top:14px">Your Instagram handle</label>'+
-    '<input id="claimHandle" class="m-in" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@yourhandle" value="@">'+
-    '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="claimNext">Continue</button></div>'
+    '<div class="m-sub">'+esc(d.day)+' \u00b7 '+esc(d.name)+'</div>'+
+    '<label class="m-lab">Find yourself</label>'+
+    '<input id="claimSearch" class="m-in" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Type your name or @handle">'+
+    '<div id="claimResults" class="claim-results"></div>'+
+    '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button></div>'
   );
-  setTimeout(function(){ var i=document.getElementById("claimName"); if(i){ i.focus(); } },50);
+  setTimeout(function(){ var i=document.getElementById("claimSearch"); if(i){ i.addEventListener("input",renderClaimResults); i.focus(); } renderClaimResults(); },50);
+}
+// Everyone we have seen before: roster + core players + play history, with handle and photo where known.
+function knownPlayers(){
+  var map={};
+  function add(name,handle,pkey){ if(!name) return; var nk=hkey(name); if(!nk) return;
+    var e=map[nk]||(map[nk]={name:name,handle:"",photo:null});
+    if(!e.handle && handle) e.handle=handle;
+    if(!e.photo){ var ph=(pkey&&PHOTOS[pkey])||PHOTOS[name]||null; if(ph) e.photo=ph; } }
+  for(var n in PLAYERS){ add(n, PLAYERS[n].handle, n); }
+  var days=(SCHEDULE_WEEK&&SCHEDULE_WEEK.days)||[];
+  days.forEach(function(d){ (d.players||[]).forEach(function(p){ if(p&&p.n&&!p.v) add(p.n, p.h, p.p||p.n); }); });
+  (HISTORY||[]).forEach(function(s){ (s.standings||[]).forEach(function(r){ add(r.name,"",null); });
+    (s.games||[]).forEach(function(g){ (g.a||[]).concat(g.b||[]).forEach(function(nm){ if(nm&&String(nm).indexOf("?")<0) add(nm,"",null); }); }); });
+  (SEASON||[]).forEach(function(r){ add(r.name,"",null); });
+  var arr=[]; for(var k in map) arr.push(map[k]);
+  arr.sort(function(a,b){return a.name.localeCompare(b.name);});
+  return arr;
+}
+function claimOptAva(e){
+  if(e.photo) return '<span class="ava ph" style="width:40px;height:40px;border-color:var(--lime)"><img src="'+e.photo+'" alt=""></span>';
+  return '<span class="ava" style="width:40px;height:40px;background:#55606e;font-size:18px">'+esc((e.name||"?").charAt(0).toUpperCase())+'</span>';
+}
+function renderClaimResults(){
+  var box=document.getElementById("claimResults"); if(!box) return;
+  var inp=document.getElementById("claimSearch"); var raw=(inp&&inp.value||"").trim(); var q=hkey(raw);
+  var all=knownPlayers();
+  var list = q ? all.filter(function(e){ return hkey(e.name).indexOf(q)>=0 || (e.handle&&hkey(e.handle).indexOf(q)>=0); }) : all;
+  var shown=list.slice(0,10), hh="";
+  shown.forEach(function(e){ hh+='<div class="claim-opt" data-act="claimPick" data-name="'+esc(e.name)+'" data-handle="'+esc(e.handle||"")+'">'+claimOptAva(e)+'<div style="min-width:0;flex:1"><div class="sn">'+esc(e.name)+'</div><div class="sh">'+esc(e.handle||"from past games")+'</div></div></div>'; });
+  if(!shown.length){ hh+='<div class="claim-none">No one from past games matches '+(raw?'\u201c'+esc(raw)+'\u201d':'that')+'.</div>'; }
+  if(raw && !shown.length){ hh+='<div class="claim-opt new" data-act="claimNewUser"><span class="ava vac" style="width:40px;height:40px">+</span><div style="min-width:0;flex:1"><div class="sn">Add as new player</div><div class="sh">'+esc(raw)+' is not in past games</div></div></div>'; }
+  box.innerHTML=hh;
+}
+function claimPick(name,handle){
+  claimState.name=name||"";
+  claimState.handle=handle||("@"+hkey(name));
+  claimState.known=true;
+  claimProceed();
+}
+function claimNewUser(){
+  var raw=((document.getElementById("claimSearch")||{}).value||"").trim(); var looksHandle=/^@/.test(raw);
+  showModal(
+    '<div class="m-h">New player</div>'+
+    '<div class="m-note">We couldn\u2019t find you in past games, so you\u2019ll be added as new.</div>'+
+    '<label class="m-lab">Your name</label>'+
+    '<input id="claimName" class="m-in" type="text" autocapitalize="words" autocorrect="off" placeholder="First name" value="'+esc(looksHandle?"":raw)+'">'+
+    '<label class="m-lab" style="margin-top:14px">Your Instagram handle</label>'+
+    '<input id="claimHandle" class="m-in" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@yourhandle" value="'+esc(looksHandle?raw:"@")+'">'+
+    '<div class="m-row"><button class="m-btn ghost" data-act="claimBack">Back</button><button class="m-btn" data-act="claimNext">Continue</button></div>'
+  );
+  setTimeout(function(){ var i=document.getElementById("claimName"); if(i) i.focus(); },50);
 }
 function claimNext(){
   var i=document.getElementById("claimHandle"); if(!i) return;
@@ -678,15 +733,19 @@ function claimNext(){
   var ni=document.getElementById("claimName"); var typedName=(ni&&ni.value||"").trim();
   var handle="@"+k; var pf=photoForHandle(handle);
   claimState.handle=handle; claimState.known=!!pf; claimState.name=(pf&&pf.name)||typedName||"";
-  var msg = pf
-    ? 'We have your photo on file. One more step to lock it in.'
-    : 'We don’t have your photo yet. Screenshot your IG handle and profile pic and send it to <b>@benlee.ig</b> so we can add you. Then finish below.';
+  claimProceed();
+}
+function claimProceed(){
+  var handle=claimState.handle, pf=photoForHandle(handle), hasPhoto=!!(pf&&pf.photo);
+  var msg = hasPhoto
+    ? 'We\u2019ve got you. One more step to lock it in.'
+    : 'We don\u2019t have your photo yet. Screenshot your IG handle and profile pic and send it to <b>@benlee.ig</b> so we can add you. Then finish below.';
   showModal(
     '<div class="m-h">Almost in, '+esc(handle)+'</div>'+
     '<div class="m-note">'+msg+'</div>'+
     '<div class="m-step"><span class="m-num">1</span> Venmo <b>$6</b> to <b>@benjamintwl</b> to confirm your spot.</div>'+
     '<button class="m-btn venmo" data-act="claimVenmo">Open Venmo</button>'+
-    '<div class="m-step" style="margin-top:14px"><span class="m-num">2</span> Add yourself to the roster. You’ll show as pending until Ben confirms.</div>'+
+    '<div class="m-step" style="margin-top:14px"><span class="m-num">2</span> Add yourself to the roster. You\u2019ll show as pending until Ben confirms.</div>'+
     '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="claimAdd">Add me</button></div>'
   );
 }
@@ -907,6 +966,9 @@ document.addEventListener("click",function(e){
   }
   else if(act==="claim"){ openClaim(t.getAttribute("data-event")); }
   else if(act==="claimNext"){ claimNext(); }
+  else if(act==="claimPick"){ claimPick(t.getAttribute("data-name"), t.getAttribute("data-handle")); }
+  else if(act==="claimNewUser"){ claimNewUser(); }
+  else if(act==="claimBack"){ openClaim(claimState.id); }
   else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
   else if(act==="claimAdd"){ claimAdd(); }
   else if(act==="claimCancel"){ closeModal(); }
