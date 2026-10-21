@@ -415,15 +415,7 @@ var HISTORY_BASELINE=[
   {date:"2026-10-08", loc:"La Cienega", label:"", winners:["Jonathan","Stella"], standings:[{name:"Jonathan",w:6,l:2,diff:25},{name:"Stella",w:6,l:2,diff:25}], games:[], ts:Date.parse("2026-10-08T19:00:00")}
 ];
 // Corrections applied over whatever history loads (live DB or baseline), by date. Display-only patch.
-var HISTORY_FIXES = {
-  "2026-09-28": { loc:"La Cienega", label:"Round Robin", winners:["Stella"],
-    standings:[
-      {name:"Stella",w:6,l:1,diff:16},
-      {name:"Brian",w:4,l:3,diff:0},
-      {name:"Dre",w:3,l:4,diff:2},
-      {name:"Ben",w:1,l:6,diff:-18}
-    ] }
-};
+var HISTORY_FIXES = {}; // past-game corrections now live permanently in the database
 function applyHistoryFixes(){ (HISTORY||[]).forEach(function(e){ var f=HISTORY_FIXES[e&&e.date]; if(f){ for(var k in f) e[k]=f[k]; } }); }
 var pastOpen={}; // which Past Games rows are expanded
 var SIGNUPS={}; var _signupsJson=""; var claimState={}; // self-serve signups per event
