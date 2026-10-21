@@ -408,12 +408,23 @@ var state={}, tab="schedule", saveTimers={};
 var HISTORY=[]; var BASE_SESSIONS=0; // past sessions now live in HISTORY_BASELINE below
 // The 5 sessions that pre-date live uploads. Scores weren't recorded game-by-game, so just session + winner.
 var HISTORY_BASELINE=[
-  {date:"2026-09-28", loc:"La Cienega", label:"", winners:["Stella"], standings:[{name:"Stella",w:6,l:1,diff:16}], games:[], ts:Date.parse("2026-09-28T19:00:00")},
+  {date:"2026-09-28", loc:"La Cienega", label:"Round Robin", winners:["Stella"], standings:[{name:"Stella",w:6,l:1,diff:16},{name:"Brian",w:4,l:3,diff:0},{name:"Dre",w:3,l:4,diff:2},{name:"Ben",w:1,l:6,diff:-18}], games:[], ts:Date.parse("2026-09-28T19:00:00")},
   {date:"2026-09-29", loc:"Roxbury", label:"", winners:["Ben"], standings:[{name:"Ben",w:7,l:1,diff:42}], games:[], ts:Date.parse("2026-09-29T19:00:00")},
   {date:"2026-10-05", loc:"La Cienega", label:"", winners:["Ben"], standings:[{name:"Ben",w:6,l:1,diff:28}], games:[], ts:Date.parse("2026-10-05T19:00:00")},
   {date:"2026-10-06", loc:"Roxbury", label:"", winners:["Ben"], standings:[{name:"Ben",w:4,l:3,diff:5}], games:[], ts:Date.parse("2026-10-06T19:00:00")},
   {date:"2026-10-08", loc:"La Cienega", label:"", winners:["Jonathan","Stella"], standings:[{name:"Jonathan",w:6,l:2,diff:25},{name:"Stella",w:6,l:2,diff:25}], games:[], ts:Date.parse("2026-10-08T19:00:00")}
 ];
+// Corrections applied over whatever history loads (live DB or baseline), by date. Display-only patch.
+var HISTORY_FIXES = {
+  "2026-09-28": { loc:"La Cienega", label:"Round Robin", winners:["Stella"],
+    standings:[
+      {name:"Stella",w:6,l:1,diff:16},
+      {name:"Brian",w:4,l:3,diff:0},
+      {name:"Dre",w:3,l:4,diff:2},
+      {name:"Ben",w:1,l:6,diff:-18}
+    ] }
+};
+function applyHistoryFixes(){ (HISTORY||[]).forEach(function(e){ var f=HISTORY_FIXES[e&&e.date]; if(f){ for(var k in f) e[k]=f[k]; } }); }
 var pastOpen={}; // which Past Games rows are expanded
 var SIGNUPS={}; var _signupsJson=""; var claimState={}; // self-serve signups per event
 var ORG_CODE="3071"; var ORGANIZER=false;
@@ -832,7 +843,7 @@ function loadSeasonHistory(cb){
     done();
   });
   dbGetKey("history").then(function(hh){
-    if(hh && hh.length){ HISTORY=hh; } else { HISTORY=HISTORY_BASELINE.slice(); dbPutKey("history",HISTORY); } // seed past sessions on first run
+    if(hh && hh.length){ HISTORY=hh; } else { HISTORY=HISTORY_BASELINE.slice(); dbPutKey("history",HISTORY); } applyHistoryFixes(); // seed past sessions on first run
     done();
   });
 }
@@ -961,7 +972,7 @@ function pastBody(s){
     h+='<div class="pnote">Game-by-game scores weren’t recorded for this night.</div>';
   }
   if(s.standings&&s.standings.length){
-    h+='<div class="pfin"><div class="pfin-h">'+((gms&&gms.length)?'Final standings':'Winner')+'</div>';
+    h+='<div class="pfin"><div class="pfin-h">'+(((gms&&gms.length)||(s.standings&&s.standings.length>1))?'Final standings':'Winner')+'</div>';
     s.standings.forEach(function(r,i){ h+='<div class="pfin-r"><span class="pfin-left"><span class="pfin-rk">'+(i+1)+'.</span>'+nameAva(r.name,22)+'<span>'+esc(r.name)+'</span></span><span>'+r.w+'-'+r.l+' &middot; '+(r.diff>=0?'+':'')+r.diff+'</span></div>'; });
     h+='</div>';
   }
