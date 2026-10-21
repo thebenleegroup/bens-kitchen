@@ -214,6 +214,11 @@ body {
 .claim-opt:active{background:#1f252e}
 .claim-opt.new{border-style:dashed;border-color:#3a414b}
 .claim-none{color:#8891a0;font-size:13px;padding:10px 2px}
+.segwrap{display:flex;gap:6px;background:#161a20;border:1px solid #262b33;border-radius:999px;padding:4px;margin-bottom:12px}
+.seg{flex:1;border:0;background:transparent;color:#8891a0;font:800 14px system-ui;padding:9px 6px;border-radius:999px;cursor:pointer}
+.seg.on{background:var(--lime);color:#0E1116}
+.provhdr{color:#8891a0;font:800 11px system-ui;letter-spacing:1.3px;text-transform:uppercase;margin:16px 2px 8px}
+.brow.sea.prov{opacity:.6}
 </style>
 </head>
 <body>
@@ -810,21 +815,44 @@ function claimDone(d,handle){
 function signupId(){ return "s"+Date.now()+Math.floor(Math.random()*1000); }
 function nwFmt(n){ if(!n) return '-'; return (Math.round(n*10)/10).toString(); }
 function seasonSorted(){ return SEASON.slice().sort(function(x,y){return y.w-x.w||y.diff-x.diff||((y.nw||0)-(x.nw||0))||x.name.localeCompare(y.name);}); }
+var seasonMode='winpct'; var SEASON_MIN_GAMES=20;
+try{ var _sm=localStorage.getItem('bk_seasonmode'); if(_sm==='wins'||_sm==='winpct') seasonMode=_sm; }catch(e){}
+function seasonRanked(){
+  var arr=SEASON.map(function(r){ var g=(r.w||0)+(r.l||0); var o={}; for(var k in r) o[k]=r[k]; o.g=g; o.wp=g?r.w/g:0; o.pg=g?r.diff/g:0; return o; });
+  var q=arr.filter(function(r){return r.g>=SEASON_MIN_GAMES;}).sort(function(a,b){ return (Math.round(b.wp*100)-Math.round(a.wp*100))||(b.pg-a.pg)||(b.w-a.w)||a.name.localeCompare(b.name); });
+  var p=arr.filter(function(r){return r.g<SEASON_MIN_GAMES;}).sort(function(a,b){ return (b.wp-a.wp)||(b.pg-a.pg)||a.name.localeCompare(b.name); });
+  return {q:q,p:p};
+}
+function seasonRowHTML(r, rank, prov){
+  var g=(r.w||0)+(r.l||0), pct=g?Math.round(r.w/g*100):0;
+  var top=(rank===1&&!prov)?" top":"";
+  return '<div class="brow sea'+top+(prov?' prov':'')+'"><span class="rk">'+(rank||'&middot;')+'</span><span class="pl">'+seasonAva(r,36)+
+    '<span class="nm"><span class="n1">'+esc(r.name)+'</span><span class="n2">'+r.sessions+(r.sessions===1?' session':' sessions')+' played</span></span></span>'+
+    '<span class="st" style="color:'+(r.nw>0?'#F4C542':'#55606e')+';font-weight:800">'+nwFmt(r.nw)+'</span>'+
+    '<span class="st w">'+r.w+'</span><span class="st">'+r.l+'</span>'+
+    '<span class="st '+(r.diff>0?"pos":r.diff<0?"neg":"")+'">'+(r.diff>0?"+":"")+r.diff+'</span>'+
+    '<span class="st" style="color:var(--cyan)">'+pct+'%</span></div>';
+}
 function renderSeason(){
-  var ns=BASE_SESSIONS+HISTORY.length;
-  var h='<div class="banner" style="border-left-color:var(--lime)">Running leaderboard across all '+ns+' sessions. Night wins = 1st-place finishes. Ranked by total wins, ties by point differential.</div>';
-  h+='<div class="board"><div class="brow sea head"><span class="l">#</span><span class="l">Player</span><span>Night<br>Wins</span><span>W</span><span>L</span><span>Diff</span><span>Win%</span></div>';
-  seasonSorted().forEach(function(r,i){
-    var top=(i===0)?" top":""; var g=r.w+r.l, pct=g?Math.round(r.w/g*100):0;
-    h+='<div class="brow sea'+top+'"><span class="rk">'+(i+1)+'</span><span class="pl">'+seasonAva(r,36)+
-       '<span class="nm"><span class="n1">'+esc(r.name)+'</span><span class="n2">'+r.sessions+(r.sessions===1?' session':' sessions')+' played</span></span></span>'+
-       '<span class="st" style="color:'+(r.nw>0?'#F4C542':'#55606e')+';font-weight:800">'+nwFmt(r.nw)+'</span>'+
-       '<span class="st w">'+r.w+'</span><span class="st">'+r.l+'</span>'+
-       '<span class="st '+(r.diff>0?"pos":r.diff<0?"neg":"")+'">'+(r.diff>0?"+":"")+r.diff+'</span>'+
-       '<span class="st" style="color:var(--cyan)">'+pct+'%</span></div>';
-  });
-  h+='</div>';
-  h+='<div class="rules"><p class="rtxt"><b style="color:var(--ink)">Season to date.</b> Night wins count 1st-place finishes. Wins reward showing up and winning; win% is per-game rate; point differential breaks ties.</p></div>';
+  var ns=BASE_SESSIONS+HISTORY.length, wins=(seasonMode!=='winpct');
+  var h='<div class="segwrap"><button class="seg'+(wins?' on':'')+'" data-act="seasonMode" data-mode="wins">Total Wins</button><button class="seg'+(!wins?' on':'')+'" data-act="seasonMode" data-mode="winpct">Win %</button></div>';
+  h+='<div class="banner" style="border-left-color:var(--lime)">'+(wins
+     ? 'Ranked by total wins across all '+ns+' sessions, ties by point differential. Rewards showing up and winning.'
+     : 'Ranked by win rate, minimum '+SEASON_MIN_GAMES+' games to qualify, ties by per-game point margin. Fair across uneven attendance.')+'</div>';
+  var head='<div class="board"><div class="brow sea head"><span class="l">#</span><span class="l">Player</span><span>Night<br>Wins</span><span>W</span><span>L</span><span>Diff</span><span>Win%</span></div>';
+  if(wins){
+    h+=head; seasonSorted().forEach(function(r,i){ h+=seasonRowHTML(r,i+1,false); }); h+='</div>';
+  } else {
+    var rk=seasonRanked();
+    h+=head; rk.q.forEach(function(r,i){ h+=seasonRowHTML(r,i+1,false); }); h+='</div>';
+    if(rk.p.length){
+      h+='<div class="provhdr">Provisional &middot; needs '+SEASON_MIN_GAMES+' games to qualify</div>';
+      h+='<div class="board">'; rk.p.forEach(function(r){ h+=seasonRowHTML(r,null,true); }); h+='</div>';
+    }
+  }
+  h+='<div class="rules"><p class="rtxt"><b style="color:var(--ink)">'+(wins?'Total wins.':'Win rate.')+'</b> '+(wins
+     ? 'Night wins count 1st-place finishes. Win% is your per-game rate; point differential breaks ties.'
+     : 'Win% is games won divided by games played. You need '+SEASON_MIN_GAMES+' games to reach the ranked board; per-game point margin breaks ties. Night wins and total diff shown for reference.')+'</p></div>';
   document.getElementById("view").innerHTML=h;
 }
 // ---- Season + history persistence ----
@@ -996,6 +1024,7 @@ document.addEventListener("click",function(e){
   else if(act==="claimPick"){ claimPick(t.getAttribute("data-name"), t.getAttribute("data-handle")); }
   else if(act==="claimNewUser"){ claimNewUser(); }
   else if(act==="claimBack"){ openClaim(claimState.id); }
+  else if(act==="seasonMode"){ seasonMode=t.getAttribute("data-mode"); try{localStorage.setItem("bk_seasonmode",seasonMode);}catch(e){} renderSeason(); }
   else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
   else if(act==="claimAdd"){ claimAdd(); }
   else if(act==="claimCancel"){ closeModal(); }
