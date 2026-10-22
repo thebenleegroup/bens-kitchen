@@ -219,6 +219,24 @@ body {
 .seg.on{background:var(--lime);color:#0E1116}
 .provhdr{color:#8891a0;font:800 11px system-ui;letter-spacing:1.3px;text-transform:uppercase;margin:16px 2px 8px}
 .brow.sea.prov{opacity:.6}
+.court.photo{position:relative}
+.photo-del{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(14,17,22,.72);color:#fff;font-size:18px;line-height:1;cursor:pointer;z-index:3}
+.addphoto{display:block;width:100%;margin-bottom:12px}
+.herowrap{margin:0 0 14px}
+.hero{position:relative;width:100%;aspect-ratio:3/2;max-height:260px;border-radius:16px;overflow:hidden;background:#161a20;cursor:pointer}
+.hero-layer{position:absolute;inset:0;background-size:cover;background-position:center 28%;transition:opacity .8s ease}
+#heroB{opacity:0}
+.hero-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(14,17,22,.88),rgba(14,17,22,0) 55%);pointer-events:none}
+.hero-tag{position:absolute;top:10px;left:12px;background:var(--lime);color:#0E1116;font-weight:800;font-size:11px;letter-spacing:1.5px;padding:4px 9px;border-radius:999px;pointer-events:none}
+.hero-cap{position:absolute;left:12px;right:70px;bottom:16px;color:#fff;font-weight:800;font-size:15px;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.hero-dots{position:absolute;right:12px;bottom:12px;display:flex;gap:5px;pointer-events:none}
+.hero-dots .hd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.45)}
+.hero-dots .hd.on{background:#fff}
+.hero-rail{display:flex;gap:7px;overflow-x:auto;padding:8px 2px 2px;-webkit-overflow-scrolling:touch}
+.hero-rail::-webkit-scrollbar{display:none}
+.hero-thumb{width:48px;height:48px;border-radius:10px;object-fit:cover;flex:0 0 auto;opacity:.5;border:2px solid transparent;cursor:pointer}
+.hero-thumb.on{opacity:1;border-color:var(--lime)}
+.hero-add{flex:0 0 auto;width:48px;height:48px;border-radius:10px;border:2px dashed #3a414b;background:#161a20;color:var(--lime);font-size:24px;line-height:1;cursor:pointer}
 </style>
 </head>
 <body>
@@ -810,6 +828,7 @@ function refreshHeader(){
 }
 function renderSchedule(){
   var Wk=SCHEDULE_WEEK, h='';
+  h+=heroHTML();
   h+=bannerHTML();
   if(ORGANIZER){ h+='<div style="margin-bottom:12px"><button class="m-btn" data-act="addGame" style="width:100%">&#43; Add a game</button></div>'; }
   var today=new Date(); today.setHours(0,0,0,0);
@@ -847,6 +866,7 @@ function renderSchedule(){
   if(!shown){ h+='<div class="court" style="margin-bottom:12px;text-align:center;color:var(--mut)"><div class="disp" style="font-size:22px;color:var(--ink)">No games on the calendar</div><div style="font-size:13px;margin-top:4px">New sessions will show up here. DM @benlee.ig to get on the next one.</div></div>'; }
   h+='<div class="rules"><div style="font-size:20px;font-weight:800;color:var(--lime)">Venmo $6 to @benjamintwl to confirm your spot</div><div style="font-size:13px;color:var(--mut);margin-top:4px">Stay tuned for upcoming spots · DM @benlee.ig for the waitlist</div></div>';
   document.getElementById("view").innerHTML=h;
+  startHero();
 }
 // ---- Claim a spot ----
 var VENMO_URL="https://venmo.com/benjamintwl";
@@ -1076,15 +1096,94 @@ var GALLERY=[
   {src:"photos/photo-2.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jay Money", sub:"Roxbury \u00B7 Oct 15th", crown:[15.8,31]},
   {src:"photos/photo-1.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Ben", sub:"La Cienega \u00B7 Oct 5th", crown:[48.3,24.6]}
 ];
+/* ===== Community gallery + hero ===== */
+var CUSTOM_GALLERY={}, _galleryJson="";
+function loadGallery(cb){ dbGetKey("gallery").then(function(g){ CUSTOM_GALLERY=g||{}; _galleryJson=JSON.stringify(CUSTOM_GALLERY); if(cb) cb(); }); }
+function galleryAll(){
+  var ups=[]; for(var id in CUSTOM_GALLERY){ var g=CUSTOM_GALLERY[id]; if(g&&g.src){ ups.push({src:g.src,title:g.title||"",sub:g.sub||"",ts:g.ts||0,_gid:id}); } }
+  ups.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+  return ups.concat(GALLERY);
+}
+var HERO={idx:0, active:"A", iv:null};
+function heroHTML(){
+  var g=galleryAll(); if(!g.length) return "";
+  HERO.idx=0; HERO.active="A";
+  var first=g[0];
+  var dots=g.map(function(_,i){ return '<span class="hd'+(i===0?' on':'')+'"></span>'; }).join("");
+  var thumbs=g.map(function(p,i){ return '<img class="hero-thumb'+(i===0?' on':'')+'" data-act="heroJump" data-i="'+i+'" src="'+esc(p.src)+'" alt="" loading="lazy">'; }).join("");
+  var add=ORGANIZER?'<button class="hero-add" data-act="addPhoto" aria-label="Add a photo">+</button>':'';
+  return '<div class="herowrap">'+
+    '<div class="hero" data-act="heroOpen">'+
+      '<div class="hero-layer" id="heroA" style="background-image:url(\''+esc(first.src)+'\')"></div>'+
+      '<div class="hero-layer" id="heroB"></div>'+
+      '<div class="hero-grad"></div>'+
+      '<div class="hero-tag">THE CREW</div>'+
+      '<div class="hero-cap" id="heroCap">'+esc(first.sub||first.title||"")+'</div>'+
+      '<div class="hero-dots" id="heroDots">'+dots+'</div>'+
+    '</div>'+
+    '<div class="hero-rail">'+thumbs+add+'</div>'+
+  '</div>';
+}
+function setHero(i){
+  var g=galleryAll(); if(!g.length) return;
+  i=((i%g.length)+g.length)%g.length; HERO.idx=i;
+  var a=document.getElementById("heroA"), b=document.getElementById("heroB"); if(!a||!b) return;
+  var show=(HERO.active==="A")?b:a, hide=(HERO.active==="A")?a:b;
+  show.style.backgroundImage="url('"+g[i].src+"')"; show.style.opacity="1"; hide.style.opacity="0";
+  HERO.active=(HERO.active==="A")?"B":"A";
+  var cap=document.getElementById("heroCap"); if(cap) cap.textContent=(g[i].sub||g[i].title||"");
+  var dd=document.querySelectorAll("#heroDots .hd"); for(var k=0;k<dd.length;k++) dd[k].className="hd"+(k===i?" on":"");
+  var th=document.querySelectorAll(".hero-thumb"); for(var m=0;m<th.length;m++) th[m].className="hero-thumb"+(m===i?" on":"");
+}
+function advanceHero(){ setHero(HERO.idx+1); }
+function startHero(){ stopHero(); var g=galleryAll(); if(g.length>1) HERO.iv=setInterval(advanceHero,4500); }
+function stopHero(){ if(HERO.iv){ clearInterval(HERO.iv); HERO.iv=null; } }
+function jumpHero(i){ setHero(+i); startHero(); }
+function heroOpen(){ tab="photos"; render(); }
+function addPhoto(){
+  if(!ORGANIZER) return;
+  var inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+  inp.onchange=function(){
+    var f=inp.files&&inp.files[0]; if(!f) return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var max=1100, w=img.width, hh=img.height, sc=Math.min(1,max/Math.max(w,hh));
+        w=Math.round(w*sc); hh=Math.round(hh*sc);
+        var cv=document.createElement("canvas"); cv.width=w; cv.height=hh;
+        cv.getContext("2d").drawImage(img,0,0,w,hh);
+        var data=cv.toDataURL("image/jpeg",0.82);
+        var id="g"+Date.now(); var obj={src:data,title:"",sub:"",ts:Date.now()};
+        CUSTOM_GALLERY[id]=obj; _galleryJson=JSON.stringify(CUSTOM_GALLERY);
+        var finish=function(){ if(tab==="schedule") renderSchedule(); else if(tab==="photos") renderPhotos(); };
+        if(DB) dbPutKey("gallery/"+id,obj).then(finish); else finish();
+      };
+      img.src=rd.result;
+    };
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
+function delPhoto(id){
+  if(!ORGANIZER) return;
+  if(!confirm("Remove this photo?")) return;
+  var finish=function(){ delete CUSTOM_GALLERY[id]; _galleryJson=JSON.stringify(CUSTOM_GALLERY); if(tab==="photos") renderPhotos(); else if(tab==="schedule") renderSchedule(); };
+  if(DB) fetch(DB+"/gallery/"+id+".json",{method:"DELETE"}).then(finish).catch(finish); else finish();
+}
 function renderPhotos(){
-  var h='';
-  GALLERY.forEach(function(p){
+  var h='', g=galleryAll();
+  if(ORGANIZER) h+='<button class="m-btn addphoto" data-act="addPhoto">+ Add a photo</button>';
+  g.forEach(function(p){
+    var up=!!p._gid;
     h+='<div class="court photo">'+
-       '<a href="'+esc(p.src)+'" target="_blank" rel="noopener"><img src="'+esc(p.src)+'" alt="Group photo, '+esc(p.sub||p.title)+'" loading="lazy" width="1200" height="1600">'+(p.crown?'<span class="crown" style="left:'+p.crown[0]+'%;top:'+p.crown[1]+'%">&#128081;</span>':'')+'</a>'+
-       '<div class="pcap"><div><div class="phd">'+esc(p.title)+'</div><div class="psub">'+esc(p.sub||'')+'</div></div>'+
+       '<a href="'+esc(p.src)+'" target="_blank" rel="noopener"><img src="'+esc(p.src)+'" alt="Group photo, '+esc(p.sub||p.title||'community')+'" loading="lazy">'+(p.crown?'<span class="crown" style="left:'+p.crown[0]+'%;top:'+p.crown[1]+'%">&#128081;</span>':'')+'</a>'+
+       (up&&ORGANIZER?'<button class="photo-del" data-act="delPhoto" data-id="'+esc(p._gid)+'" aria-label="Remove photo">&#215;</button>':'')+
+       '<div class="pcap"><div><div class="phd">'+esc(p.title||'Ben’s Kitchen')+'</div><div class="psub">'+esc(p.sub||'')+'</div></div>'+
        (p.tag?'<span class="ptag">'+esc(p.tag)+'</span>':'')+'</div>'+
        '</div>';
   });
+  if(!g.length) h+='<div class="rules"><div style="color:var(--mut)">No photos yet.</div></div>';
   document.getElementById("view").innerHTML=h;
 }
 function renderPast(){
@@ -1161,6 +1260,7 @@ function render(){
   rebuildActive();
   document.querySelectorAll(".tab").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-tab")===tab); });
   if(tab==="standings") renderStandings(); else if(tab==="games") renderGames(); else if(tab==="season") renderSeason(); else if(tab==="past") renderPast(); else if(tab==="photos") renderPhotos(); else renderSchedule();
+  if(tab!=="schedule") stopHero();
 }
 function onScore(id,a,b){
   state[id]={a:a,b:b,ts:Date.now()};
@@ -1192,6 +1292,10 @@ document.addEventListener("click",function(e){
   else if(act==="refreshHeader"){ refreshHeader(); }
   else if(act==="setGuys"){ openSetGuys(t.getAttribute("data-id")); }
   else if(act==="saveGuys"){ saveGuys(t.getAttribute("data-id")); }
+  else if(act==="heroOpen"){ heroOpen(); }
+  else if(act==="heroJump"){ jumpHero(t.getAttribute("data-i")); }
+  else if(act==="addPhoto"){ addPhoto(); }
+  else if(act==="delPhoto"){ delPhoto(t.getAttribute("data-id")); }
   else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
   else if(act==="claimAdd"){ claimAdd(); }
   else if(act==="claimCancel"){ closeModal(); }
@@ -1262,6 +1366,7 @@ function setLive(){
 function poll(){
   dbGetKey("days").then(function(d){ var j=JSON.stringify(d||{}); if(j===_daysJson) return; CUSTOM_DAYS=d||{}; _daysJson=j; mergeDays(); rebuildActive(); if(tab==="schedule") renderSchedule(); });
   dbGetKey("banner").then(function(bb){ var j=JSON.stringify(bb||null); if(j===_bannerJson) return; CUSTOM_BANNER=(bb&&bb.headline)?bb:null; _bannerJson=j; if(tab==="schedule") renderSchedule(); });
+  dbGetKey("gallery").then(function(gg){ var j=JSON.stringify(gg||{}); if(j===_galleryJson) return; CUSTOM_GALLERY=gg||{}; _galleryJson=j; if(tab==="schedule") renderSchedule(); else if(tab==="photos") renderPhotos(); });
   dbGet().then(function(remote){
     if(!remote) return; var changed=false;
     for(var id in remote){ var rt=(remote[id]&&remote[id].ts)||0, lt=(state[id]&&state[id].ts)||0;
@@ -1281,6 +1386,7 @@ loadSeasonHistory(function(){ render(); }); // re-render once history is in so a
 loadSignups(function(){ if(tab==="schedule") renderSchedule(); });
 loadDays(function(){ render(); });
 loadBanner(function(){ if(tab==="schedule") renderSchedule(); });
+loadGallery(function(){ if(tab==="schedule") renderSchedule(); else if(tab==="photos") renderPhotos(); });
 dbGet().then(function(r){ if(r) state=r; render(); updateCount(); });
 setInterval(poll,3500);
 document.addEventListener("visibilitychange",function(){ if(!document.hidden) poll(); });
