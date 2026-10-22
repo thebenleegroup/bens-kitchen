@@ -723,7 +723,7 @@ function addGameSave(){
   var timeStr=start+"-"+end+"pm";
   var venue=loc+" · "+timeStr;
   var obj={ day:dayLabel(date), name:fmt.name, venue:venue, claim:true, id:date, cap:fmt.cap, note:"Tap an open spot to claim it", players:[], courts:courts, custom:true, ts:Date.now() };
-  if(fmt.mixed){ obj.format="mixed"; obj.men=["Ben","Brian"]; }
+  if(fmt.mixed){ obj.format="mixed"; obj.men=[]; }
   var btn=document.querySelector('[data-act="addGameSave"]'); if(btn){ btn.textContent="Adding…"; btn.disabled=true; }
   var finish=function(){ CUSTOM_DAYS[date]=obj; _daysJson=JSON.stringify(CUSTOM_DAYS); mergeDays(); closeModal(); tab="schedule"; render(); };
   if(!DB){ finish(); return; }
@@ -733,6 +733,30 @@ function delGame(id){
   if(!ORGANIZER) return;
   if(!confirm("Remove this game from the schedule? Any signups for it stay saved.")) return;
   dbDelDay(id).then(function(){ delete CUSTOM_DAYS[id]; _daysJson=JSON.stringify(CUSTOM_DAYS); mergeDays(); if(tab==="schedule") renderSchedule(); rebuildActive(); });
+}
+function openSetGuys(id){
+  if(!ORGANIZER) return; var day=dayById(id); if(!day) return;
+  var roster=activeRoster(day);
+  if(roster.length<2){ alert("Need at least 2 players signed up before picking the guys."); return; }
+  var cur=(day.men||[]).map(hkey);
+  var rows=roster.map(function(n){ var on=cur.indexOf(hkey(n))>=0;
+    return '<label class="guy-row'+(on?" on":"")+'" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid #262b33;border-radius:12px;background:#161a20;margin-bottom:6px;cursor:pointer">'+
+      '<input type="checkbox" class="guy-cb" value="'+esc(n)+'"'+(on?" checked":"")+'><span class="sn">'+esc(n)+'</span></label>'; }).join("");
+  showModal(
+    '<div class="m-h">Pick the 2 guys</div>'+
+    '<div class="m-note">Mixed doubles pairs each guy with a girl. Choose exactly two guys; everyone else is a girl.</div>'+
+    '<div id="guyList">'+rows+'</div>'+
+    '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="saveGuys" data-id="'+esc(id)+'">Save</button></div>'
+  );
+}
+function saveGuys(id){
+  var picked=[].slice.call(document.querySelectorAll('.guy-cb')).filter(function(c){return c.checked;}).map(function(c){return c.value;});
+  if(picked.length!==2){ alert("Pick exactly two guys."); return; }
+  var day=CUSTOM_DAYS[id]; if(!day) return;
+  day.men=picked; CUSTOM_DAYS[id]=day; _daysJson=JSON.stringify(CUSTOM_DAYS); mergeDays();
+  var finish=function(){ closeModal(); tab="schedule"; render(); };
+  if(!DB){ finish(); return; }
+  dbPutDay(id,day).then(finish);
 }
 var CUSTOM_BANNER=null; var _bannerJson="";
 function loadBanner(cb){ dbGetKey("banner").then(function(b){ CUSTOM_BANNER=(b&&b.headline)?b:null; _bannerJson=JSON.stringify(b||null); if(cb) cb(); }); }
@@ -805,6 +829,7 @@ function renderSchedule(){
     h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span>'+(ORGANIZER&&CUSTOM_DAYS[dd.id]?'<button class="pend-x" data-act="delGame" data-id="'+esc(dd.id)+'" aria-label="remove game">&#215;</button>':'')+'<span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
     h+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
     if(dd.courts && dd.courts.length){ var cs=dd.courts.filter(function(x){return x.c&&x.c.length;}).map(function(x){return x.h+" "+x.c.join(" & ");}); if(cs.length) h+='<div class="srain" style="color:var(--cyan)">Courts '+esc(cs.join("  \u00b7  "))+'</div>'; }
+    if(dd.format==="mixed"){ var _g=(dd.men||[]); h+='<div class="srain">Guys: '+(_g.length?esc(_g.join(" & ")):(ORGANIZER?"not set yet":"TBD"))+(ORGANIZER&&CUSTOM_DAYS[dd.id]?' <button class="m-btn" data-act="setGuys" data-id="'+esc(dd.id)+'" style="padding:2px 10px;font-size:12px;margin-left:6px">'+(_g.length?"Change":"Set")+'</button>':"")+'</div>'; }
     if(dd.note) h+='<div class="srain">'+esc(dd.note)+'</div>';
     h+='<div class="sgrid'+(dd.claim?' claim-grid':'')+'">';
     confirmed.forEach(function(p){
@@ -1165,6 +1190,8 @@ document.addEventListener("click",function(e){
   else if(act==="editHeader"){ openEditHeader(); }
   else if(act==="saveHeader"){ saveHeader(); }
   else if(act==="refreshHeader"){ refreshHeader(); }
+  else if(act==="setGuys"){ openSetGuys(t.getAttribute("data-id")); }
+  else if(act==="saveGuys"){ saveGuys(t.getAttribute("data-id")); }
   else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
   else if(act==="claimAdd"){ claimAdd(); }
   else if(act==="claimCancel"){ closeModal(); }
