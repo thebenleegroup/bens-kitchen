@@ -268,7 +268,7 @@ var PHOTOS = {"Kwan": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
 // SESSION/SCHEDULE/TOTAL are rebuilt by rebuildActive() from the active day.
 var SESSION = {}; var SCHEDULE = []; var TOTAL = 0; var ACTIVE_DAY = null;
 var SEASON_SESSIONS=5;
-var SCHEDULE_WEEK = {"title": "OCT 12-19", "full": true, "days": [{"day": "MON 10/12", "name": "MIXED DOUBLES", "venue": "La Cienega \u00b7 7-9pm", "note": "Cali Smash if it rains", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Jonathan", "h": "@jmfox1968"}]}, {"day": "TUE 10/13", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Anthony", "h": "@dragontoe99"}, {"n": "Jason", "h": "@odarrot_mod", "p": "Jason"}], "games": [{"r":1,"courts":[[["Ben","Brian"],["Anthony","Jason"]]]},{"r":2,"courts":[[["Ben","Anthony"],["Brian","Jason"]]]},{"r":3,"courts":[[["Ben","Jason"],["Brian","Anthony"]]]},{"r":4,"courts":[[["Ben","Brian"],["Anthony","Jason"]]]},{"r":5,"courts":[[["Ben","Anthony"],["Brian","Jason"]]]},{"r":6,"courts":[[["Ben","Jason"],["Brian","Anthony"]]]}]}, {"day": "WED 10/14", "name": "ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-14", "cap": 4, "note": "Tap an open spot to claim it", "players": [], "games": [{"r":1,"courts":[[["Ben","Brian"],["Stella","Anthony"]]]},{"r":2,"courts":[[["Ben","Stella"],["Brian","Anthony"]]]},{"r":3,"courts":[[["Ben","Anthony"],["Brian","Stella"]]]},{"r":4,"courts":[[["Ben","Brian"],["Stella","Anthony"]]]},{"r":5,"courts":[[["Ben","Stella"],["Brian","Anthony"]]]},{"r":6,"courts":[[["Ben","Anthony"],["Brian","Stella"]]]},{"r":7,"final":true,"courts":[[["?","?"],["?","?"]]]}]}, {"day": "THU 10/15", "name": "DOUBLE ROUND ROBIN", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Justin", "h": "@ashedout", "p": "Justin"}, {"n": "Tyler", "h": "@tyorden", "p": "Tyler"}, {"n": "Jay Money", "h": "@jmoney_final", "p": "JayMoney"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Dre", "h": "@illydre"}]}, {"day": "MON 10/19", "name": "DOUBLE ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-19", "cap": 8, "removed": ["@illydre", "andre", "dre"], "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Jonathan", "h": "@jmfox1968", "p": "Jonathan"}, {"n": "Alan", "h": "@alanv.v", "p": "Alan"}, {"n": "Bo", "h": "@Bo", "p": "Bo"}, {"n": "Kwan", "h": "Kwanye West", "p": "Kwan"}]}, {"day": "TUE 10/20", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury · 7-9pm", "claim": true, "id": "2026-10-20", "cap": 4, "format": "mixed", "men": ["Ben", "Brian"], "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22", "p": "Brian"}]}, {"day": "THU 10/22", "name": "KITCHEN NIGHTMARES", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-22", "cap": 4, "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22", "p": "Brian"}]}, {"day": "MON 10/26", "name": "DOUBLE ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-26", "cap": 8, "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}]}, {"day": "TUE 10/27", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury · 7-9pm", "claim": true, "id": "2026-10-27", "cap": 4, "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}]}]};
+var SCHEDULE_WEEK = {"title": "OCT 12-19", "full": true, "days": [{"day": "MON 10/12", "name": "MIXED DOUBLES", "venue": "La Cienega \u00b7 7-9pm", "note": "Cali Smash if it rains", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Jonathan", "h": "@jmfox1968"}]}, {"day": "TUE 10/13", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Anthony", "h": "@dragontoe99"}, {"n": "Jason", "h": "@odarrot_mod", "p": "Jason"}], "games": [{"r":1,"courts":[[["Ben","Brian"],["Anthony","Jason"]]]},{"r":2,"courts":[[["Ben","Anthony"],["Brian","Jason"]]]},{"r":3,"courts":[[["Ben","Jason"],["Brian","Anthony"]]]},{"r":4,"courts":[[["Ben","Brian"],["Anthony","Jason"]]]},{"r":5,"courts":[[["Ben","Anthony"],["Brian","Jason"]]]},{"r":6,"courts":[[["Ben","Jason"],["Brian","Anthony"]]]}]}, {"day": "WED 10/14", "name": "ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-14", "cap": 4, "note": "Tap an open spot to claim it", "players": [], "games": [{"r":1,"courts":[[["Ben","Brian"],["Stella","Anthony"]]]},{"r":2,"courts":[[["Ben","Stella"],["Brian","Anthony"]]]},{"r":3,"courts":[[["Ben","Anthony"],["Brian","Stella"]]]},{"r":4,"courts":[[["Ben","Brian"],["Stella","Anthony"]]]},{"r":5,"courts":[[["Ben","Stella"],["Brian","Anthony"]]]},{"r":6,"courts":[[["Ben","Anthony"],["Brian","Stella"]]]},{"r":7,"final":true,"courts":[[["?","?"],["?","?"]]]}]}, {"day": "THU 10/15", "name": "DOUBLE ROUND ROBIN", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Justin", "h": "@ashedout", "p": "Justin"}, {"n": "Tyler", "h": "@tyorden", "p": "Tyler"}, {"n": "Jay Money", "h": "@jmoney_final", "p": "JayMoney"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Dre", "h": "@illydre"}]}, {"day": "MON 10/19", "name": "DOUBLE ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-19", "cap": 8, "removed": ["@illydre", "andre", "dre"], "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Jonathan", "h": "@jmfox1968", "p": "Jonathan"}, {"n": "Alan", "h": "@alanv.v", "p": "Alan"}, {"n": "Bo", "h": "@Bo", "p": "Bo"}, {"n": "Kwan", "h": "Kwanye West", "p": "Kwan"}]}, {"day": "TUE 10/20", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury · 7-9pm", "claim": true, "id": "2026-10-20", "cap": 4, "format": "mixed", "men": ["Ben", "Brian"], "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22", "p": "Brian"}]}, {"day": "THU 10/22", "name": "THURSDAY NIGHT DINK", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-22", "cap": 4, "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22", "p": "Brian"}]}, {"day": "MON 10/26", "name": "DOUBLE ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-26", "cap": 8, "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}]}, {"day": "TUE 10/27", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury · 7-9pm", "claim": true, "id": "2026-10-27", "cap": 4, "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}]}]};
 var SEASON = [{"name": "Ben", "color": "#45D3E6", "w": 18, "l": 11, "diff": 57, "sessions": 4, "nw": 3}, {"name": "Stella", "color": "#C792EA", "w": 14, "l": 8, "diff": 9, "sessions": 3, "nw": 1.5}, {"name": "Brian", "color": "#FF6B6B", "w": 13, "l": 16, "diff": -31, "sessions": 4, "nw": 0}, {"name": "Jonathan", "color": "#C6F432", "w": 11, "l": 4, "diff": 51, "sessions": 2, "nw": 0.5}, {"name": "Jason", "color": "#7BB4FF", "w": 8, "l": 6, "diff": 12, "sessions": 2, "nw": 0}, {"name": "Joyce", "color": "#F7965A", "w": 8, "l": 15, "diff": -34, "sessions": 3, "nw": 0}, {"name": "Anthony", "color": "#FFD166", "w": 4, "l": 3, "diff": 1, "sessions": 1, "nw": 0}, {"name": "Jay", "color": "#7EE0A6", "w": 4, "l": 11, "diff": -44, "sessions": 2, "nw": 0}, {"name": "Dre", "color": "#4FD6B8", "w": 3, "l": 4, "diff": 2, "sessions": 1, "nw": 0}, {"name": "Dwayne", "color": "#B6E36A", "w": 3, "l": 4, "diff": -3, "sessions": 1, "nw": 0}, {"name": "Jade", "color": "#F79ACB", "w": 2, "l": 6, "diff": -20, "sessions": 1, "nw": 0}];
 
 function pad2(n){return (n<10?"0":"")+n;}
@@ -647,11 +647,15 @@ function dayDate(dd){
 // ---- Organizer-added games: stored in the DB, merged into the schedule so they behave like built-in days ----
 var BASE_DAYS = ((SCHEDULE_WEEK&&SCHEDULE_WEEK.days)||[]).slice();
 var CUSTOM_DAYS = {}; var _daysJson = "";
+var COURTS_BY_LOC = { "Roxbury":["1A","1B","1C","1D"], "La Cienega":["12A","12B","12C","12D","7A","7B","7C","7D","8A","8B","8C","8D"] };
 var GAME_FORMATS = [
-  {id:"drr", name:"DOUBLE ROUND ROBIN", cap:8},
-  {id:"fft", name:"FIREFIGHT TUESDAY", cap:4},
-  {id:"tnd", name:"THURSDAY NIGHT DINK", cap:8}
+  {id:"drr", name:"DOUBLE ROUND ROBIN", cap:8, courts:2},
+  {id:"mns", name:"MONDAY NIGHT SMASH", cap:4, courts:1},
+  {id:"fft", name:"FIREFIGHT TUESDAY", cap:4, courts:1},
+  {id:"tnd", name:"THURSDAY NIGHT DINK", cap:4, courts:1},
+  {id:"mix", name:"MIXED DOUBLES", cap:4, courts:1, mixed:true}
 ];
+function fmtById(id){ return GAME_FORMATS.filter(function(f){return f.id===id;})[0]||GAME_FORMATS[0]; }
 function mergeDays(){
   var out=BASE_DAYS.slice(), ids={}; out.forEach(function(d){ if(d&&d.id) ids[d.id]=1; });
   Object.keys(CUSTOM_DAYS).forEach(function(id){ var cd=CUSTOM_DAYS[id]; if(!cd) return;
@@ -669,30 +673,57 @@ function dayLabel(iso){ var p=(iso||"").split("-"); if(p.length!==3) return iso|
 function openAddGame(){
   if(!ORGANIZER) return;
   var opts=GAME_FORMATS.map(function(f){return '<option value="'+f.id+'">'+f.name+' ('+f.cap+' players)</option>';}).join("");
+  var hrs=[5,6,7,8,9,10,11];
+  function hopt(sel){ return hrs.map(function(hh){return '<option value="'+hh+'"'+(hh===sel?' selected':'')+'>'+hh+' pm</option>';}).join(""); }
   showModal(
     '<div class="m-h">Add a game</div>'+
     '<label class="m-lab">Date</label>'+
     '<input id="agDate" class="m-in" type="date">'+
+    '<label class="m-lab" style="margin-top:12px">Location</label>'+
+    '<select id="agLoc" class="m-in"><option value="Roxbury">Roxbury</option><option value="La Cienega">La Cienega</option></select>'+
     '<label class="m-lab" style="margin-top:12px">Time</label>'+
-    '<input id="agTime" class="m-in" type="text" value="7-9pm" placeholder="7-9pm">'+
-    '<label class="m-lab" style="margin-top:12px">Place</label>'+
-    '<input id="agPlace" class="m-in" type="text" placeholder="La Cienega" list="agVenues" autocapitalize="words" autocorrect="off">'+
-    '<datalist id="agVenues"><option value="La Cienega"></option><option value="Roxbury"></option><option value="Roxbury Park"></option></datalist>'+
+    '<div style="display:flex;gap:8px;align-items:center"><select id="agStart" class="m-in" style="margin:0">'+hopt(7)+'</select><span>to</span><select id="agEnd" class="m-in" style="margin:0">'+hopt(9)+'</select></div>'+
     '<label class="m-lab" style="margin-top:12px">Format</label>'+
     '<select id="agFormat" class="m-in">'+opts+'</select>'+
+    '<label class="m-lab" style="margin-top:12px">Courts by hour</label>'+
+    '<div id="agCourts"></div>'+
     '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="addGameSave">Add game</button></div>'
   );
+  setTimeout(function(){ ["agLoc","agStart","agEnd","agFormat"].forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener("change", renderCourtInputs); }); renderCourtInputs(); },30);
+}
+function courtOpts(list){ return '<option value="">Court</option>'+list.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join(""); }
+function renderCourtInputs(){
+  var box=document.getElementById("agCourts"); if(!box) return;
+  var loc=(document.getElementById("agLoc")||{}).value||"Roxbury";
+  var start=+((document.getElementById("agStart")||{}).value||7);
+  var end=+((document.getElementById("agEnd")||{}).value||9);
+  var fmt=fmtById((document.getElementById("agFormat")||{}).value);
+  var list=COURTS_BY_LOC[loc]||[];
+  if(end<=start){ box.innerHTML='<div style="color:#FF6B6B;font-size:12px">End time must be after start.</div>'; return; }
+  var hh="";
+  for(var hr=start; hr<end; hr++){
+    var slot=hr+"-"+(hr+1)+"pm";
+    hh+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="min-width:64px;font-weight:700;font-size:13px">'+slot+'</span>';
+    for(var c=0;c<fmt.courts;c++){ hh+='<select class="m-in ag-court" data-slot="'+slot+'" style="margin:0;flex:1">'+courtOpts(list)+'</select>'; }
+    hh+='</div>';
+  }
+  box.innerHTML=hh;
 }
 function addGameSave(){
   var date=((document.getElementById("agDate")||{}).value||"").trim();
-  var time=((document.getElementById("agTime")||{}).value||"").trim();
-  var place=((document.getElementById("agPlace")||{}).value||"").trim();
-  var fid=((document.getElementById("agFormat")||{}).value||"");
+  var loc=((document.getElementById("agLoc")||{}).value||"").trim();
+  var start=+((document.getElementById("agStart")||{}).value||7);
+  var end=+((document.getElementById("agEnd")||{}).value||9);
+  var fmt=fmtById((document.getElementById("agFormat")||{}).value);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ var di=document.getElementById("agDate"); if(di) di.style.borderColor="#FF6B6B"; return; }
-  if(!place){ var pi=document.getElementById("agPlace"); if(pi) pi.style.borderColor="#FF6B6B"; return; }
-  var fmt=GAME_FORMATS.filter(function(f){return f.id===fid;})[0]||GAME_FORMATS[0];
-  var venue=place+(time?(" · "+time):"");
-  var obj={ day:dayLabel(date), name:fmt.name, venue:venue, claim:true, id:date, cap:fmt.cap, note:"Tap an open spot to claim it", players:[], custom:true, ts:Date.now() };
+  if(end<=start){ var ee=document.getElementById("agEnd"); if(ee) ee.style.borderColor="#FF6B6B"; return; }
+  var bySlot={};
+  [].forEach.call(document.querySelectorAll(".ag-court"), function(s){ var slot=s.getAttribute("data-slot"); if(!bySlot[slot]) bySlot[slot]=[]; if(s.value) bySlot[slot].push(s.value); });
+  var courts=[]; for(var hr=start; hr<end; hr++){ var slot=hr+"-"+(hr+1)+"pm"; courts.push({h:slot, c:bySlot[slot]||[]}); }
+  var timeStr=start+"-"+end+"pm";
+  var venue=loc+" · "+timeStr;
+  var obj={ day:dayLabel(date), name:fmt.name, venue:venue, claim:true, id:date, cap:fmt.cap, note:"Tap an open spot to claim it", players:[], courts:courts, custom:true, ts:Date.now() };
+  if(fmt.mixed){ obj.format="mixed"; obj.men=["Ben","Brian"]; }
   var btn=document.querySelector('[data-act="addGameSave"]'); if(btn){ btn.textContent="Adding…"; btn.disabled=true; }
   var finish=function(){ CUSTOM_DAYS[date]=obj; _daysJson=JSON.stringify(CUSTOM_DAYS); mergeDays(); closeModal(); tab="schedule"; render(); };
   if(!DB){ finish(); return; }
@@ -703,17 +734,59 @@ function delGame(id){
   if(!confirm("Remove this game from the schedule? Any signups for it stay saved.")) return;
   dbDelDay(id).then(function(){ delete CUSTOM_DAYS[id]; _daysJson=JSON.stringify(CUSTOM_DAYS); mergeDays(); if(tab==="schedule") renderSchedule(); rebuildActive(); });
 }
+var CUSTOM_BANNER=null; var _bannerJson="";
+function loadBanner(cb){ dbGetKey("banner").then(function(b){ CUSTOM_BANNER=(b&&b.headline)?b:null; _bannerJson=JSON.stringify(b||null); if(cb) cb(); }); }
+function dbPutBanner(obj){ if(!DB) return Promise.resolve(false); return fetch(DB+"/banner.json",{method:"PUT",body:JSON.stringify(obj)}).then(function(r){return r.ok;}).catch(function(){return false;}); }
+function dbDelBanner(){ if(!DB) return Promise.resolve(false); return fetch(DB+"/banner.json",{method:"DELETE"}).then(function(r){return r.ok;}).catch(function(){return false;}); }
+function titleName(s){ return (s||"").toLowerCase().replace(/\b\w/g,function(c){return c.toUpperCase();}); }
+function fmtDayShort(d){ var dt=dayDate(d); if(!dt) return d.day||""; return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dt.getDay()]+" "+(dt.getMonth()+1)+"/"+dt.getDate(); }
+function autoBanner(){
+  var today=new Date(); today.setHours(0,0,0,0);
+  var up=((SCHEDULE_WEEK&&SCHEDULE_WEEK.days)||[]).filter(function(d){ var dt=dayDate(d); return dt && dt.getTime()>=today.getTime(); }).sort(function(a,b){return dayDate(a)-dayDate(b);});
+  var lines=up.slice(0,4).map(function(d){ return fmtDayShort(d)+" · "+titleName(d.name)+" · "+venueLoc(d.venue); });
+  return { headline:"CLAIM YOUR SPOT", body: lines.join("\n"), footer:"Tap a night to grab your spot. Live scores and the season leaderboard update as you play." };
+}
+function currentBanner(){ return CUSTOM_BANNER || autoBanner(); }
+function bannerHTML(){
+  var b=currentBanner();
+  var body=(b.body||"").split("\n").filter(function(x){return x.trim();}).map(function(x){return esc(x);}).join("<br>");
+  var h='<div class="banner" style="border-left:0;background:var(--lime);color:#0E1116;font-size:13px">';
+  h+='<div class="disp" style="font-size:25px;line-height:1">'+esc(b.headline||"")+'</div>';
+  if(body) h+='<div style="font-weight:800;line-height:1.55;margin-top:8px">'+body+'</div>';
+  if(b.footer) h+='<div style="font-weight:600;margin-top:8px">'+esc(b.footer)+'</div>';
+  if(ORGANIZER) h+='<div style="margin-top:10px;display:flex;gap:8px"><button class="m-btn" data-act="editHeader" style="flex:1;padding:7px;background:#0E1116;color:var(--lime)">Edit header</button><button class="m-btn" data-act="refreshHeader" style="flex:1;padding:7px;background:#0E1116;color:var(--lime)">Refresh</button></div>';
+  h+='</div>';
+  return h;
+}
+function openEditHeader(){
+  if(!ORGANIZER) return; var b=currentBanner();
+  showModal(
+    '<div class="m-h">Edit header</div>'+
+    '<label class="m-lab">Headline</label>'+
+    '<input id="hdHead" class="m-in" type="text" value="'+esc(b.headline||"")+'">'+
+    '<label class="m-lab" style="margin-top:12px">Body (one line each)</label>'+
+    '<textarea id="hdBody" class="m-in" style="min-height:92px;resize:vertical">'+esc(b.body||"")+'</textarea>'+
+    '<label class="m-lab" style="margin-top:12px">Footer</label>'+
+    '<input id="hdFoot" class="m-in" type="text" value="'+esc(b.footer||"")+'">'+
+    '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="refreshHeader">Refresh from schedule</button><button class="m-btn" data-act="saveHeader">Save</button></div>'
+  );
+}
+function saveHeader(){
+  var obj={ headline:((document.getElementById("hdHead")||{}).value||"").trim(), body:((document.getElementById("hdBody")||{}).value||""), footer:((document.getElementById("hdFoot")||{}).value||"").trim() };
+  CUSTOM_BANNER=obj; _bannerJson=JSON.stringify(obj);
+  var finish=function(){ closeModal(); if(tab==="schedule") renderSchedule(); };
+  if(!DB){ finish(); return; }
+  dbPutBanner(obj).then(finish);
+}
+function refreshHeader(){
+  if(!ORGANIZER) return;
+  CUSTOM_BANNER=null; _bannerJson=JSON.stringify(null);
+  if(DB) dbDelBanner();
+  closeModal(); if(tab==="schedule") renderSchedule();
+}
 function renderSchedule(){
   var Wk=SCHEDULE_WEEK, h='';
-  h+='<div class="banner" style="border-left:0;background:var(--lime);color:#0E1116;font-size:13px">'+
-     '<div class="disp" style="font-size:25px;line-height:1">CLAIM YOUR SPOT</div>'+
-     '<div style="font-weight:800;line-height:1.55;margin-top:8px">'+
-       'This Thu &middot; Kitchen Nightmares &middot; La Cienega<br>'+
-       'Next Mon &middot; Double Round Robin &middot; La Cienega<br>'+
-       'Next Tue &middot; Firefight Tuesday &middot; Roxbury'+
-     '</div>'+
-     '<div style="font-weight:600;margin-top:8px">Tap a night to grab your spot. Live scores and the season leaderboard update as you play.</div>'+
-   '</div>';
+  h+=bannerHTML();
   if(ORGANIZER){ h+='<div style="margin-bottom:12px"><button class="m-btn" data-act="addGame" style="width:100%">&#43; Add a game</button></div>'; }
   var today=new Date(); today.setHours(0,0,0,0);
   var shown=0;
@@ -731,6 +804,7 @@ function renderSchedule(){
     }
     h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span>'+(ORGANIZER&&CUSTOM_DAYS[dd.id]?'<button class="pend-x" data-act="delGame" data-id="'+esc(dd.id)+'" aria-label="remove game">&#215;</button>':'')+'<span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
     h+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
+    if(dd.courts && dd.courts.length){ var cs=dd.courts.filter(function(x){return x.c&&x.c.length;}).map(function(x){return x.h+" "+x.c.join(" & ");}); if(cs.length) h+='<div class="srain" style="color:var(--cyan)">Courts '+esc(cs.join("  \u00b7  "))+'</div>'; }
     if(dd.note) h+='<div class="srain">'+esc(dd.note)+'</div>';
     h+='<div class="sgrid'+(dd.claim?' claim-grid':'')+'">';
     confirmed.forEach(function(p){
@@ -1088,6 +1162,9 @@ document.addEventListener("click",function(e){
   else if(act==="addGame"){ openAddGame(); }
   else if(act==="addGameSave"){ addGameSave(); }
   else if(act==="delGame"){ delGame(t.getAttribute("data-id")); }
+  else if(act==="editHeader"){ openEditHeader(); }
+  else if(act==="saveHeader"){ saveHeader(); }
+  else if(act==="refreshHeader"){ refreshHeader(); }
   else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
   else if(act==="claimAdd"){ claimAdd(); }
   else if(act==="claimCancel"){ closeModal(); }
@@ -1157,6 +1234,7 @@ function setLive(){
 }
 function poll(){
   dbGetKey("days").then(function(d){ var j=JSON.stringify(d||{}); if(j===_daysJson) return; CUSTOM_DAYS=d||{}; _daysJson=j; mergeDays(); rebuildActive(); if(tab==="schedule") renderSchedule(); });
+  dbGetKey("banner").then(function(bb){ var j=JSON.stringify(bb||null); if(j===_bannerJson) return; CUSTOM_BANNER=(bb&&bb.headline)?bb:null; _bannerJson=j; if(tab==="schedule") renderSchedule(); });
   dbGet().then(function(remote){
     if(!remote) return; var changed=false;
     for(var id in remote){ var rt=(remote[id]&&remote[id].ts)||0, lt=(state[id]&&state[id].ts)||0;
@@ -1175,6 +1253,7 @@ setLive();
 loadSeasonHistory(function(){ render(); }); // re-render once history is in so activeDay can skip uploaded nights
 loadSignups(function(){ if(tab==="schedule") renderSchedule(); });
 loadDays(function(){ render(); });
+loadBanner(function(){ if(tab==="schedule") renderSchedule(); });
 dbGet().then(function(r){ if(r) state=r; render(); updateCount(); });
 setInterval(poll,3500);
 document.addEventListener("visibilitychange",function(){ if(!document.hidden) poll(); });
