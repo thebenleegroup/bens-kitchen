@@ -223,10 +223,12 @@ body {
 .photo-del{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(14,17,22,.72);color:#fff;font-size:18px;line-height:1;cursor:pointer;z-index:3}
 .addphoto{display:block;width:100%;margin-bottom:12px}
 .herowrap{margin:0 0 14px}
-.hero{position:relative;width:100%;aspect-ratio:3/2;max-height:260px;border-radius:16px;overflow:hidden;background:#161a20;cursor:pointer}
-.hero-layer{position:absolute;inset:0;background-size:cover;background-position:center 28%;transition:opacity .8s ease}
+.hero{position:relative;width:100%;aspect-ratio:4/5;max-height:430px;border-radius:16px;overflow:hidden;background:#0b0e12;cursor:pointer}
+.hero-layer{position:absolute;inset:0;transition:opacity .8s ease}
+.hero-blur{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(22px) brightness(.5);transform:scale(1.18)}
+.hero-pic{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center}
 #heroB{opacity:0}
-.hero-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(14,17,22,.88),rgba(14,17,22,0) 55%);pointer-events:none}
+.hero-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(14,17,22,.72),rgba(14,17,22,0) 38%);pointer-events:none}
 .hero-tag{position:absolute;top:10px;left:12px;background:var(--lime);color:#0E1116;font-weight:800;font-size:11px;letter-spacing:1.5px;padding:4px 9px;border-radius:999px;pointer-events:none}
 .hero-cap{position:absolute;left:12px;right:70px;bottom:16px;color:#fff;font-weight:800;font-size:15px;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
 .hero-dots{position:absolute;right:12px;bottom:12px;display:flex;gap:5px;pointer-events:none}
@@ -1114,8 +1116,8 @@ function heroHTML(){
   var add=ORGANIZER?'<button class="hero-add" data-act="addPhoto" aria-label="Add a photo">+</button>':'';
   return '<div class="herowrap">'+
     '<div class="hero" data-act="heroOpen">'+
-      '<div class="hero-layer" id="heroA" style="background-image:url(\''+esc(first.src)+'\')"></div>'+
-      '<div class="hero-layer" id="heroB"></div>'+
+      '<div class="hero-layer" id="heroA"><div class="hero-blur" style="background-image:url(\''+esc(first.src)+'\')"></div><img class="hero-pic" src="'+esc(first.src)+'" alt=""></div>'+
+      '<div class="hero-layer" id="heroB"><div class="hero-blur"></div><img class="hero-pic" src="" alt=""></div>'+
       '<div class="hero-grad"></div>'+
       '<div class="hero-tag">THE CREW</div>'+
       '<div class="hero-cap" id="heroCap">'+esc(first.sub||first.title||"")+'</div>'+
@@ -1129,7 +1131,9 @@ function setHero(i){
   i=((i%g.length)+g.length)%g.length; HERO.idx=i;
   var a=document.getElementById("heroA"), b=document.getElementById("heroB"); if(!a||!b) return;
   var show=(HERO.active==="A")?b:a, hide=(HERO.active==="A")?a:b;
-  show.style.backgroundImage="url('"+g[i].src+"')"; show.style.opacity="1"; hide.style.opacity="0";
+  var sb=show.querySelector(".hero-blur"), sp=show.querySelector(".hero-pic");
+  if(sb) sb.style.backgroundImage="url('"+g[i].src+"')"; if(sp) sp.src=g[i].src;
+  show.style.opacity="1"; hide.style.opacity="0";
   HERO.active=(HERO.active==="A")?"B":"A";
   var cap=document.getElementById("heroCap"); if(cap) cap.textContent=(g[i].sub||g[i].title||"");
   var dd=document.querySelectorAll("#heroDots .hd"); for(var k=0;k<dd.length;k++) dd[k].className="hd"+(k===i?" on":"");
