@@ -644,6 +644,65 @@ function dayDate(dd){
   if(m){ return new Date((new Date()).getFullYear(), +m[1]-1, +m[2]); }
   return null;
 }
+// ---- Organizer-added games: stored in the DB, merged into the schedule so they behave like built-in days ----
+var BASE_DAYS = ((SCHEDULE_WEEK&&SCHEDULE_WEEK.days)||[]).slice();
+var CUSTOM_DAYS = {}; var _daysJson = "";
+var GAME_FORMATS = [
+  {id:"drr", name:"DOUBLE ROUND ROBIN", cap:8},
+  {id:"fft", name:"FIREFIGHT TUESDAY", cap:4},
+  {id:"tnd", name:"THURSDAY NIGHT DINK", cap:8}
+];
+function mergeDays(){
+  var out=BASE_DAYS.slice(), ids={}; out.forEach(function(d){ if(d&&d.id) ids[d.id]=1; });
+  Object.keys(CUSTOM_DAYS).forEach(function(id){ var cd=CUSTOM_DAYS[id]; if(!cd) return;
+    if(ids[id]){ for(var i=0;i<out.length;i++){ if(out[i].id===id) out[i]=cd; } } else { out.push(cd); ids[id]=1; } });
+  out.sort(function(a,b){ var da=dayDate(a), db=dayDate(b); return (da?da.getTime():0)-(db?db.getTime():0); });
+  if(SCHEDULE_WEEK) SCHEDULE_WEEK.days=out;
+}
+function loadDays(cb){ dbGetKey("days").then(function(d){ CUSTOM_DAYS=d||{}; _daysJson=JSON.stringify(CUSTOM_DAYS); mergeDays(); if(cb) cb(); }); }
+function dbPutDay(id,obj){ if(!DB) return Promise.resolve(false);
+  return fetch(DB+"/days/"+encodeURIComponent(id)+".json",{method:"PUT",body:JSON.stringify(obj)}).then(function(r){return r.ok;}).catch(function(){return false;}); }
+function dbDelDay(id){ if(!DB) return Promise.resolve(false);
+  return fetch(DB+"/days/"+encodeURIComponent(id)+".json",{method:"DELETE"}).then(function(r){return r.ok;}).catch(function(){return false;}); }
+function dayLabel(iso){ var p=(iso||"").split("-"); if(p.length!==3) return iso||""; var d=new Date(+p[0],+p[1]-1,+p[2]);
+  return ["SUN","MON","TUE","WED","THU","FRI","SAT"][d.getDay()]+" "+(+p[1])+"/"+(+p[2]); }
+function openAddGame(){
+  if(!ORGANIZER) return;
+  var opts=GAME_FORMATS.map(function(f){return '<option value="'+f.id+'">'+f.name+' ('+f.cap+' players)</option>';}).join("");
+  showModal(
+    '<div class="m-h">Add a game</div>'+
+    '<label class="m-lab">Date</label>'+
+    '<input id="agDate" class="m-in" type="date">'+
+    '<label class="m-lab" style="margin-top:12px">Time</label>'+
+    '<input id="agTime" class="m-in" type="text" value="7-9pm" placeholder="7-9pm">'+
+    '<label class="m-lab" style="margin-top:12px">Place</label>'+
+    '<input id="agPlace" class="m-in" type="text" placeholder="La Cienega" list="agVenues" autocapitalize="words" autocorrect="off">'+
+    '<datalist id="agVenues"><option value="La Cienega"></option><option value="Roxbury"></option><option value="Roxbury Park"></option></datalist>'+
+    '<label class="m-lab" style="margin-top:12px">Format</label>'+
+    '<select id="agFormat" class="m-in">'+opts+'</select>'+
+    '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="addGameSave">Add game</button></div>'
+  );
+}
+function addGameSave(){
+  var date=((document.getElementById("agDate")||{}).value||"").trim();
+  var time=((document.getElementById("agTime")||{}).value||"").trim();
+  var place=((document.getElementById("agPlace")||{}).value||"").trim();
+  var fid=((document.getElementById("agFormat")||{}).value||"");
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ var di=document.getElementById("agDate"); if(di) di.style.borderColor="#FF6B6B"; return; }
+  if(!place){ var pi=document.getElementById("agPlace"); if(pi) pi.style.borderColor="#FF6B6B"; return; }
+  var fmt=GAME_FORMATS.filter(function(f){return f.id===fid;})[0]||GAME_FORMATS[0];
+  var venue=place+(time?(" · "+time):"");
+  var obj={ day:dayLabel(date), name:fmt.name, venue:venue, claim:true, id:date, cap:fmt.cap, note:"Tap an open spot to claim it", players:[], custom:true, ts:Date.now() };
+  var btn=document.querySelector('[data-act="addGameSave"]'); if(btn){ btn.textContent="Adding…"; btn.disabled=true; }
+  var finish=function(){ CUSTOM_DAYS[date]=obj; _daysJson=JSON.stringify(CUSTOM_DAYS); mergeDays(); closeModal(); tab="schedule"; render(); };
+  if(!DB){ finish(); return; }
+  dbPutDay(date,obj).then(function(ok){ if(ok){ finish(); } else { alert("Couldn’t save the game. Try again."); if(btn){ btn.textContent="Add game"; btn.disabled=false; } } });
+}
+function delGame(id){
+  if(!ORGANIZER) return;
+  if(!confirm("Remove this game from the schedule? Any signups for it stay saved.")) return;
+  dbDelDay(id).then(function(){ delete CUSTOM_DAYS[id]; _daysJson=JSON.stringify(CUSTOM_DAYS); mergeDays(); if(tab==="schedule") renderSchedule(); rebuildActive(); });
+}
 function renderSchedule(){
   var Wk=SCHEDULE_WEEK, h='';
   h+='<div class="banner" style="border-left:0;background:var(--lime);color:#0E1116;font-size:13px">'+
@@ -655,6 +714,7 @@ function renderSchedule(){
      '</div>'+
      '<div style="font-weight:600;margin-top:8px">Tap a night to grab your spot. Live scores and the season leaderboard update as you play.</div>'+
    '</div>';
+  if(ORGANIZER){ h+='<div style="margin-bottom:12px"><button class="m-btn" data-act="addGame" style="width:100%">&#43; Add a game</button></div>'; }
   var today=new Date(); today.setHours(0,0,0,0);
   var shown=0;
   Wk.days.forEach(function(dd){
@@ -669,7 +729,7 @@ function renderSchedule(){
       open=Math.max(0,cap-inCount-heldPending);
       pill=inCount+"/"+cap+" IN"; pillFull=(open===0&&heldPending===0);
     }
-    h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span><span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
+    h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span>'+(ORGANIZER&&CUSTOM_DAYS[dd.id]?'<button class="pend-x" data-act="delGame" data-id="'+esc(dd.id)+'" aria-label="remove game">&#215;</button>':'')+'<span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
     h+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
     if(dd.note) h+='<div class="srain">'+esc(dd.note)+'</div>';
     h+='<div class="sgrid'+(dd.claim?' claim-grid':'')+'">';
@@ -1025,6 +1085,9 @@ document.addEventListener("click",function(e){
   else if(act==="claimNewUser"){ claimNewUser(); }
   else if(act==="claimBack"){ openClaim(claimState.id); }
   else if(act==="seasonMode"){ seasonMode=t.getAttribute("data-mode"); try{localStorage.setItem("bk_seasonmode",seasonMode);}catch(e){} renderSeason(); }
+  else if(act==="addGame"){ openAddGame(); }
+  else if(act==="addGameSave"){ addGameSave(); }
+  else if(act==="delGame"){ delGame(t.getAttribute("data-id")); }
   else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
   else if(act==="claimAdd"){ claimAdd(); }
   else if(act==="claimCancel"){ closeModal(); }
@@ -1093,6 +1156,7 @@ function setLive(){
     b.innerHTML='<div class="banner">Syncing is off, so scores stay on this device only. To sync across everyone\'s phones, open the link that ends with #db=... (see setup notes).</div>'; }
 }
 function poll(){
+  dbGetKey("days").then(function(d){ var j=JSON.stringify(d||{}); if(j===_daysJson) return; CUSTOM_DAYS=d||{}; _daysJson=j; mergeDays(); rebuildActive(); if(tab==="schedule") renderSchedule(); });
   dbGet().then(function(remote){
     if(!remote) return; var changed=false;
     for(var id in remote){ var rt=(remote[id]&&remote[id].ts)||0, lt=(state[id]&&state[id].ts)||0;
@@ -1110,6 +1174,7 @@ setLive();
 (function(){ var b=document.getElementById("orgBtn"); if(b) b.textContent=ORGANIZER?"Organizer ✓":"Organizer"; })();
 loadSeasonHistory(function(){ render(); }); // re-render once history is in so activeDay can skip uploaded nights
 loadSignups(function(){ if(tab==="schedule") renderSchedule(); });
+loadDays(function(){ render(); });
 dbGet().then(function(r){ if(r) state=r; render(); updateCount(); });
 setInterval(poll,3500);
 document.addEventListener("visibilitychange",function(){ if(!document.hidden) poll(); });
