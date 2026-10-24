@@ -243,6 +243,12 @@ body {
 .mnav .mbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .mnav .mbtn.off{opacity:.3;cursor:default}
 .mnav .mlbl{font-weight:800;font-size:18px;min-width:150px;text-align:center}
+.a2hs{position:relative;margin:14px 0 4px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:16px 34px 14px 16px}
+.a2hs-x{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--mut);font-size:20px;line-height:1;cursor:pointer}
+.a2hs-h{font-weight:800;font-size:15px;color:var(--ink);margin-bottom:4px}
+.a2hs-t{font-size:13px;color:var(--mut);margin-bottom:8px}
+.a2hs-s{font-size:13px;color:var(--ink);margin-top:3px}
+.a2hs-s b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -883,6 +889,7 @@ function renderSchedule(){
   });
   if(!shown){ h+='<div class="court" style="margin-bottom:12px;text-align:center;color:var(--mut)"><div class="disp" style="font-size:22px;color:var(--ink)">No games on the calendar</div><div style="font-size:13px;margin-top:4px">New sessions will show up here. DM @benlee.ig to get on the next one.</div></div>'; }
   h+='<div class="rules"><div style="font-size:20px;font-weight:800;color:var(--lime)">Venmo $6 to @benjamintwl to confirm your spot</div><div style="font-size:13px;color:var(--mut);margin-top:4px">Stay tuned for upcoming spots · DM @benlee.ig for the waitlist</div></div>';
+  h+=a2hsHTML();
   document.getElementById("view").innerHTML=h;
   startHero();
 }
@@ -1159,6 +1166,18 @@ var GALLERY=[
   {src:"photos/photo-2.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jay Money", sub:"Roxbury \u00B7 Oct 15th", crown:[15.8,31]},
   {src:"photos/photo-1.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Ben", sub:"La Cienega \u00B7 Oct 5th", crown:[48.3,24.6]}
 ];
+function isStandalone(){ try{ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }catch(e){ return false; } }
+function a2hsHTML(){
+  if(isStandalone()) return '';
+  try{ if(localStorage.getItem('bk_a2hs')==='1') return ''; }catch(e){}
+  return '<div class="a2hs">'
+    +'<button class="a2hs-x" data-act="a2hsClose" aria-label="dismiss">&#215;</button>'
+    +'<div class="a2hs-h">&#128241; Add this to your home screen</div>'
+    +'<div class="a2hs-t">Open it like an app, no browser bar, one tap to the schedule and live scores.</div>'
+    +'<div class="a2hs-s"><b>iPhone (Safari):</b> tap the Share button, then <b>Add to Home Screen</b>.</div>'
+    +'<div class="a2hs-s"><b>Android (Chrome):</b> tap the &#8942; menu, then <b>Add to Home screen</b>.</div>'
+    +'</div>';
+}
 /* ===== Community gallery + hero ===== */
 var CUSTOM_GALLERY={}, _galleryJson="";
 function loadGallery(cb){ dbGetKey("gallery").then(function(g){ CUSTOM_GALLERY=g||{}; _galleryJson=JSON.stringify(CUSTOM_GALLERY); if(cb) cb(); }); }
@@ -1366,6 +1385,7 @@ document.addEventListener("click",function(e){
   else if(act==="heroJump"){ jumpHero(t.getAttribute("data-i")); }
   else if(act==="addPhoto"){ addPhoto(); }
   else if(act==="delPhoto"){ delPhoto(t.getAttribute("data-id")); }
+  else if(act==="a2hsClose"){ try{localStorage.setItem("bk_a2hs","1");}catch(e){} if(tab==="schedule") renderSchedule(); }
   else if(act==="claimVenmo"){ try{ window.open(VENMO_URL,"_blank"); }catch(e){} }
   else if(act==="claimAdd"){ claimAdd(); }
   else if(act==="claimCancel"){ closeModal(); }
