@@ -290,7 +290,24 @@ var PHOTOS = {"Kwan": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
 var SESSION = {}; var SCHEDULE = []; var TOTAL = 0; var ACTIVE_DAY = null;
 var SEASON_SESSIONS=5;
 var SCHEDULE_WEEK = {"title": "OCT 12-19", "full": true, "days": [{"day": "MON 10/12", "name": "MIXED DOUBLES", "venue": "La Cienega \u00b7 7-9pm", "note": "Cali Smash if it rains", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Jonathan", "h": "@jmfox1968"}]}, {"day": "TUE 10/13", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Anthony", "h": "@dragontoe99"}, {"n": "Jason", "h": "@odarrot_mod", "p": "Jason"}], "games": [{"r":1,"courts":[[["Ben","Brian"],["Anthony","Jason"]]]},{"r":2,"courts":[[["Ben","Anthony"],["Brian","Jason"]]]},{"r":3,"courts":[[["Ben","Jason"],["Brian","Anthony"]]]},{"r":4,"courts":[[["Ben","Brian"],["Anthony","Jason"]]]},{"r":5,"courts":[[["Ben","Anthony"],["Brian","Jason"]]]},{"r":6,"courts":[[["Ben","Jason"],["Brian","Anthony"]]]}]}, {"day": "WED 10/14", "name": "ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-14", "cap": 4, "note": "Tap an open spot to claim it", "players": [], "games": [{"r":1,"courts":[[["Ben","Brian"],["Stella","Anthony"]]]},{"r":2,"courts":[[["Ben","Stella"],["Brian","Anthony"]]]},{"r":3,"courts":[[["Ben","Anthony"],["Brian","Stella"]]]},{"r":4,"courts":[[["Ben","Brian"],["Stella","Anthony"]]]},{"r":5,"courts":[[["Ben","Stella"],["Brian","Anthony"]]]},{"r":6,"courts":[[["Ben","Anthony"],["Brian","Stella"]]]},{"r":7,"final":true,"courts":[[["?","?"],["?","?"]]]}]}, {"day": "THU 10/15", "name": "DOUBLE ROUND ROBIN", "venue": "Roxbury \u00b7 7-9pm", "status": "FULL", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22"}, {"n": "Stella", "h": "@stellaaudris"}, {"n": "Justin", "h": "@ashedout", "p": "Justin"}, {"n": "Tyler", "h": "@tyorden", "p": "Tyler"}, {"n": "Jay Money", "h": "@jmoney_final", "p": "JayMoney"}, {"n": "Joyce", "h": "@ohjoyceejoy"}, {"n": "Dre", "h": "@illydre"}]}, {"day": "MON 10/19", "name": "DOUBLE ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-19", "cap": 8, "removed": ["@illydre", "andre", "dre"], "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Jonathan", "h": "@jmfox1968", "p": "Jonathan"}, {"n": "Alan", "h": "@alanv.v", "p": "Alan"}, {"n": "Bo", "h": "@Bo", "p": "Bo"}, {"n": "Kwan", "h": "Kwanye West", "p": "Kwan"}]}, {"day": "TUE 10/20", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury · 7-9pm", "claim": true, "id": "2026-10-20", "cap": 4, "format": "mixed", "men": ["Ben", "Brian"], "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22", "p": "Brian"}]}, {"day": "THU 10/22", "name": "THURSDAY NIGHT DINK", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-22", "cap": 4, "courts": [{"h":"7-8pm","c":["12D"]},{"h":"8-9pm","c":["7C"]}], "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}, {"n": "Brian", "h": "@mako.b22", "p": "Brian"}]}, {"day": "MON 10/26", "name": "DOUBLE ROUND ROBIN", "venue": "La Cienega · 7-9pm", "claim": true, "id": "2026-10-26", "cap": 8, "courts": [{"h":"7-8pm","c":["12A","12B"]},{"h":"8-9pm","c":["12A","12B"]}], "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}]}, {"day": "TUE 10/27", "name": "FIREFIGHT TUESDAY", "venue": "Roxbury · 7-9pm", "claim": true, "id": "2026-10-27", "cap": 4, "courts": [{"h":"7-8pm","c":["1D"]},{"h":"8-9pm","c":["1A"]}], "note": "Tap an open spot to claim it", "players": [{"n": "Ben", "h": "@benlee.ig"}]}]};
-var SEASON = [{"name": "Ben", "color": "#45D3E6", "w": 18, "l": 11, "diff": 57, "sessions": 4, "nw": 3}, {"name": "Stella", "color": "#C792EA", "w": 14, "l": 8, "diff": 9, "sessions": 3, "nw": 1.5}, {"name": "Brian", "color": "#FF6B6B", "w": 13, "l": 16, "diff": -31, "sessions": 4, "nw": 0}, {"name": "Jonathan", "color": "#C6F432", "w": 11, "l": 4, "diff": 51, "sessions": 2, "nw": 0.5}, {"name": "Jason", "color": "#7BB4FF", "w": 8, "l": 6, "diff": 12, "sessions": 2, "nw": 0}, {"name": "Joyce", "color": "#F7965A", "w": 8, "l": 15, "diff": -34, "sessions": 3, "nw": 0}, {"name": "Anthony", "color": "#FFD166", "w": 4, "l": 3, "diff": 1, "sessions": 1, "nw": 0}, {"name": "Jay", "color": "#7EE0A6", "w": 4, "l": 11, "diff": -44, "sessions": 2, "nw": 0}, {"name": "Dre", "color": "#4FD6B8", "w": 3, "l": 4, "diff": 2, "sessions": 1, "nw": 0}, {"name": "Dwayne", "color": "#B6E36A", "w": 3, "l": 4, "diff": -3, "sessions": 1, "nw": 0}, {"name": "Jade", "color": "#F79ACB", "w": 2, "l": 6, "diff": -20, "sessions": 1, "nw": 0}];
+var SEASON = [
+{"name":"Ben","color":"#45D3E6","w":43,"l":29,"diff":94,"sessions":10,"nw":5},
+{"name":"Brian","color":"#FF6B6B","w":28,"l":36,"diff":-67,"sessions":9,"nw":0},
+{"name":"Stella","color":"#C792EA","w":26,"l":25,"diff":-20,"sessions":7,"nw":1.5},
+{"name":"Jonathan","color":"#C6F432","w":23,"l":7,"diff":114,"sessions":4,"nw":2.5},
+{"name":"Anthony","color":"#FFD166","w":14,"l":13,"diff":10,"sessions":4,"nw":0},
+{"name":"Joyce","color":"#F7965A","w":13,"l":33,"diff":-99,"sessions":6,"nw":0},
+{"name":"Jason","color":"#7BB4FF","w":12,"l":8,"diff":12,"sessions":3,"nw":0},
+{"name":"Hope","color":"#22D3EE","w":7,"l":1,"diff":27,"sessions":1,"nw":1},
+{"name":"Jay Money","color":"#FACC15","w":6,"l":1,"diff":34,"sessions":1,"nw":1},
+{"name":"Dre","color":"#4FD6B8","w":6,"l":8,"diff":-7,"sessions":2,"nw":0},
+{"name":"Justin","color":"#A3E635","w":5,"l":2,"diff":16,"sessions":1,"nw":0},
+{"name":"Tyler","color":"#FB923C","w":4,"l":3,"diff":9,"sessions":1,"nw":0},
+{"name":"Jay","color":"#7EE0A6","w":4,"l":11,"diff":-44,"sessions":2,"nw":0},
+{"name":"Alan","color":"#B084F7","w":3,"l":4,"diff":0,"sessions":1,"nw":0},
+{"name":"Dwayne","color":"#B6E36A","w":3,"l":4,"diff":-3,"sessions":1,"nw":0},
+{"name":"Jade","color":"#F79ACB","w":2,"l":6,"diff":-20,"sessions":1,"nw":0}
+];
 
 function pad2(n){return (n<10?"0":"")+n;}
 function isoDate(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
@@ -1038,14 +1055,15 @@ function renderSeason(){
   document.getElementById("view").innerHTML=h;
 }
 // ---- Season + history persistence ----
+var SEASON_OK=false, HIST_OK=false;
 function loadSeasonHistory(cb){
   var pending=2, done=function(){ if(--pending===0 && cb) cb(); };
   dbGetKey("season").then(function(s){
-    if(s && s.length){ SEASON=s; } else { dbPutKey("season",SEASON); } // seed baseline on first run
+    if(s && s.length){ SEASON=s; SEASON_OK=true; } // keep live standings; NEVER overwrite the DB from a failed/empty read
     done();
   });
   dbGetKey("history").then(function(hh){
-    if(hh && hh.length){ HISTORY=hh; } else { HISTORY=HISTORY_BASELINE.slice(); dbPutKey("history",HISTORY); } applyHistoryFixes(); // seed past sessions on first run
+    if(hh && hh.length){ HISTORY=hh; HIST_OK=true; } else { HISTORY=HISTORY_BASELINE.slice(); } applyHistoryFixes(); // fall back in memory only; do not persist
     done();
   });
 }
@@ -1059,6 +1077,7 @@ function sessionWinners(rows){
 function fmtDate(iso){ try{ var d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("en-US",{month:"short",day:"numeric"}); }catch(e){ return iso; } }
 function uploadNight(){
   if(!DB){ alert("Syncing is off, so this can't be saved for everyone. Open the synced link first."); return; }
+  if(!SEASON_OK || !HIST_OK){ alert("Standings are still syncing from the server. Give it a few seconds and try again so nothing gets overwritten."); return; }
   if(!allGamesDone()){ alert("Log every game first. The upload saves the whole night at once."); return; }
   if(!confirm("Upload tonight's scores and add them to the season standings?")) return;
   if(HISTORY.some(function(h){return h.date===SESSION.date && h.loc===SESSION.loc;})){
