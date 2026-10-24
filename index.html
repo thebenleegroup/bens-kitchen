@@ -255,7 +255,7 @@ body {
 <div class="net"></div>
 <nav class="tabs">
   <button class="tab on" data-act="tab" data-tab="schedule">Schedule</button>
-  <button class="tab" data-act="tab" data-tab="season">Season Standings</button>
+  <button class="tab" data-act="tab" data-tab="season">Standings</button>
   <button class="tab" data-act="tab" data-tab="standings">Lineup</button>
   <button class="tab" data-act="tab" data-tab="games">Games</button>
   <button class="tab" data-act="tab" data-tab="past">Past Games</button>
@@ -1024,7 +1024,7 @@ function monthStandings(mk){
     var wn=(s.winners||[]), sh=wn.length?1/wn.length:0; wn.forEach(function(n){ if(agg[n]) agg[n].nw=Math.round((agg[n].nw+sh)*10)/10; });
   });
   var arr=Object.keys(agg).map(function(n){ var r=agg[n]; r.color=colorForName(n); return r; });
-  arr.sort(function(x,y){ return (y.w-x.w)||(y.diff-x.diff)||((y.nw||0)-(x.nw||0))||x.name.localeCompare(y.name); });
+  arr.sort(function(x,y){ var gx=(x.w+x.l), gy=(y.w+y.l); var px=gx?x.w/gx:0, py=gy?y.w/gy:0; return (py-px)||(y.w-x.w)||(y.diff-x.diff)||x.name.localeCompare(y.name); });
   return arr;
 }
 function monthlyHTML(head){
@@ -1039,17 +1039,17 @@ function monthlyHTML(head){
     +'<span class="mlbl">'+monthLabel(seasonMonth)+'</span>'
     +'<button class="mbtn'+(nextM?'':' off')+'" data-act="seasonNextMonth"'+(nextM?'':' disabled')+'>&#8250;</button>'
     +'</div>';
-  h+='<div class="banner" style="border-left-color:var(--lime)">'+monthLabel(seasonMonth)+' &middot; '+nsess+(nsess===1?' session':' sessions')+' &middot; ranked by wins, ties by point differential.</div>';
+  h+='<div class="banner" style="border-left-color:var(--lime)">'+monthLabel(seasonMonth)+' &middot; '+nsess+(nsess===1?' session':' sessions')+' &middot; ranked by win %, ties by total wins.</div>';
   h+=head; rows.forEach(function(r,i){ h+=seasonRowHTML(r,i+1,false); }); h+='</div>';
-  h+='<div class="rules"><p class="rtxt"><b style="color:var(--ink)">Monthly.</b> Wins and losses from this month only, ranked by wins with point differential breaking ties. Use the arrows for past months.</p></div>';
+  h+='<div class="rules"><p class="rtxt"><b style="color:var(--ink)">Monthly.</b> Win % from this month only, ranked by win percentage with total wins breaking ties. Use the arrows for past months.</p></div>';
   return h;
 }
 function renderSeason(){
   var mode=seasonMode;
   var h='<div class="segwrap">'
     +'<button class="seg'+(mode==='monthly'?' on':'')+'" data-act="seasonMode" data-mode="monthly">Monthly</button>'
-    +'<button class="seg'+(mode==='wins'?' on':'')+'" data-act="seasonMode" data-mode="wins">Total Wins</button>'
-    +'<button class="seg'+(mode==='winpct'?' on':'')+'" data-act="seasonMode" data-mode="winpct">Win %</button>'
+    +'<button class="seg'+(mode==='wins'?' on':'')+'" data-act="seasonMode" data-mode="wins">All Time Wins</button>'
+    +'<button class="seg'+(mode==='winpct'?' on':'')+'" data-act="seasonMode" data-mode="winpct">All Time %</button>'
     +'</div>';
   var head='<div class="board"><div class="brow sea head"><span class="l">#</span><span class="l">Player</span><span>Night<br>Wins</span><span>W</span><span>L</span><span>Diff</span><span>Win%</span></div>';
   if(mode==='monthly'){
