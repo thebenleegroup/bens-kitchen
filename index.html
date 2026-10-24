@@ -995,7 +995,7 @@ function claimDone(d,handle){
 function signupId(){ return "s"+Date.now()+Math.floor(Math.random()*1000); }
 function nwFmt(n){ if(!n) return '-'; return (Math.round(n*10)/10).toString(); }
 function seasonSorted(){ return SEASON.slice().sort(function(x,y){return y.w-x.w||y.diff-x.diff||((y.nw||0)-(x.nw||0))||x.name.localeCompare(y.name);}); }
-var seasonMode='monthly'; var seasonMonth=null; var SEASON_MIN_GAMES=20;
+var seasonMode='monthly'; var seasonMonth=null; var SEASON_MIN_GAMES=20; var MONTHLY_MIN_SESSIONS=3;
 try{ var _sm=localStorage.getItem('bk_seasonmode2'); if(_sm==='monthly'||_sm==='wins'||_sm==='winpct') seasonMode=_sm; }catch(e){}
 function seasonRanked(){
   var arr=SEASON.map(function(r){ var g=(r.w||0)+(r.l||0); var o={}; for(var k in r) o[k]=r[k]; o.g=g; o.wp=g?r.w/g:0; o.pg=g?r.diff/g:0; return o; });
@@ -1039,9 +1039,16 @@ function monthlyHTML(head){
     +'<span class="mlbl">'+monthLabel(seasonMonth)+'</span>'
     +'<button class="mbtn'+(nextM?'':' off')+'" data-act="seasonNextMonth"'+(nextM?'':' disabled')+'>&#8250;</button>'
     +'</div>';
-  h+='<div class="banner" style="border-left-color:var(--lime)">'+monthLabel(seasonMonth)+' &middot; '+nsess+(nsess===1?' session':' sessions')+' &middot; ranked by win %, ties by total wins.</div>';
-  h+=head; rows.forEach(function(r,i){ h+=seasonRowHTML(r,i+1,false); }); h+='</div>';
-  h+='<div class="rules"><p class="rtxt"><b style="color:var(--ink)">Monthly.</b> Win % from this month only, ranked by win percentage with total wins breaking ties. Use the arrows for past months.</p></div>';
+  h+='<div class="banner" style="border-left-color:var(--lime)">'+monthLabel(seasonMonth)+' &middot; '+nsess+(nsess===1?' session':' sessions')+' &middot; win %, min '+MONTHLY_MIN_SESSIONS+' sessions to qualify.</div>';
+  var q=rows.filter(function(r){return r.sessions>=MONTHLY_MIN_SESSIONS;});
+  var prov=rows.filter(function(r){return r.sessions<MONTHLY_MIN_SESSIONS;});
+  if(q.length){ h+=head; q.forEach(function(r,i){ h+=seasonRowHTML(r,i+1,false); }); h+='</div>'; }
+  else { h+='<div class="rules"><p class="rtxt">No one has '+MONTHLY_MIN_SESSIONS+' sessions yet this month.</p></div>'; }
+  if(prov.length){
+    h+='<div class="provhdr">Provisional &middot; needs '+MONTHLY_MIN_SESSIONS+' sessions to qualify</div>';
+    h+='<div class="board">'; prov.forEach(function(r){ h+=seasonRowHTML(r,null,true); }); h+='</div>';
+  }
+  h+='<div class="rules"><p class="rtxt"><b style="color:var(--ink)">Monthly.</b> Win % from this month only, ranked by win percentage with total wins breaking ties. You need '+MONTHLY_MIN_SESSIONS+' sessions this month to qualify for the monthly winner. Use the arrows for past months.</p></div>';
   return h;
 }
 function renderSeason(){
