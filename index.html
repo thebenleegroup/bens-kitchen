@@ -706,6 +706,8 @@ function openAddGame(){
     '<select id="agFormat" class="m-in">'+opts+'</select>'+
     '<label class="m-lab" style="margin-top:12px">Courts by hour</label>'+
     '<div id="agCourts"></div>'+
+    '<label class="m-lab" style="margin-top:12px">Note (optional)</label>'+
+    '<input id="agNote" class="m-in" placeholder="e.g. ask 8-9pm 7D to switch to 7B">'+
     '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="addGameSave">Add game</button></div>'
   );
   setTimeout(function(){ ["agLoc","agStart","agEnd","agFormat"].forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener("change", renderCourtInputs); }); renderCourtInputs(); },30);
@@ -719,12 +721,21 @@ function renderCourtInputs(){
   var fmt=fmtById((document.getElementById("agFormat")||{}).value);
   var list=COURTS_BY_LOC[loc]||[];
   if(end<=start){ box.innerHTML='<div style="color:#FF6B6B;font-size:12px">End time must be after start.</div>'; return; }
+  var ask=fmt.courts>1;
   var hh="";
   for(var hr=start; hr<end; hr++){
     var slot=hr+"-"+(hr+1)+"pm";
-    hh+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="min-width:64px;font-weight:700;font-size:13px">'+slot+'</span>';
-    for(var c=0;c<fmt.courts;c++){ hh+='<select class="m-in ag-court" data-slot="'+slot+'" style="margin:0;flex:1">'+courtOpts(list)+'</select>'; }
-    hh+='</div>';
+    if(ask){
+      hh+='<div style="font-weight:700;font-size:13px;margin:8px 0 4px">'+slot+'</div>';
+      for(var c=0;c<fmt.courts;c++){
+        hh+='<div style="display:flex;gap:8px;margin-bottom:6px"><select class="m-in ag-court" data-slot="'+slot+'" style="margin:0;flex:0 0 92px">'+courtOpts(list)+'</select>'
+          +'<input class="m-in ag-book" data-slot="'+slot+'" placeholder="Booked under" style="margin:0;flex:1"></div>';
+      }
+    } else {
+      hh+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="min-width:64px;font-weight:700;font-size:13px">'+slot+'</span>';
+      for(var c2=0;c2<fmt.courts;c2++){ hh+='<select class="m-in ag-court" data-slot="'+slot+'" style="margin:0;flex:1">'+courtOpts(list)+'</select>'; }
+      hh+='</div>';
+    }
   }
   box.innerHTML=hh;
 }
@@ -739,9 +750,14 @@ function addGameSave(){
   var bySlot={};
   [].forEach.call(document.querySelectorAll(".ag-court"), function(s){ var slot=s.getAttribute("data-slot"); if(!bySlot[slot]) bySlot[slot]=[]; if(s.value) bySlot[slot].push(s.value); });
   var courts=[]; for(var hr=start; hr<end; hr++){ var slot=hr+"-"+(hr+1)+"pm"; courts.push({h:slot, c:bySlot[slot]||[]}); }
+  var booked={}, _cs=document.querySelectorAll(".ag-court"), _bk=document.querySelectorAll(".ag-book");
+  if(_bk.length){ for(var _i=0;_i<_cs.length;_i++){ var _ct=_cs[_i].value, _nm=((_bk[_i]&&_bk[_i].value)||"").trim(); if(_ct&&_nm) booked[_ct]=_nm; } }
+  var bnote=((document.getElementById("agNote")||{}).value||"").trim();
   var timeStr=start+"-"+end+"pm";
   var venue=loc+" · "+timeStr;
   var obj={ day:dayLabel(date), name:fmt.name, venue:venue, claim:true, id:date, cap:fmt.cap, note:"Tap an open spot to claim it", players:[], courts:courts, custom:true, ts:Date.now() };
+  if(Object.keys(booked).length) obj.booked=booked;
+  if(bnote) obj.bnote=bnote;
   if(fmt.mixed){ obj.format="mixed"; obj.men=[]; }
   var btn=document.querySelector('[data-act="addGameSave"]'); if(btn){ btn.textContent="Adding…"; btn.disabled=true; }
   var finish=function(){ CUSTOM_DAYS[date]=obj; _daysJson=JSON.stringify(CUSTOM_DAYS); mergeDays(); closeModal(); tab="schedule"; render(); };
@@ -848,7 +864,8 @@ function renderSchedule(){
     }
     h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span>'+(ORGANIZER&&CUSTOM_DAYS[dd.id]?'<button class="pend-x" data-act="delGame" data-id="'+esc(dd.id)+'" aria-label="remove game">&#215;</button>':'')+'<span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
     h+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
-    if(dd.courts && dd.courts.length){ var cs=dd.courts.filter(function(x){return x.c&&x.c.length;}).map(function(x){return x.h+" "+x.c.join(" & ");}); if(cs.length) h+='<div class="srain" style="color:var(--cyan)">Courts '+esc(cs.join("  \u00b7  "))+'</div>'; }
+    if(dd.courts && dd.courts.length){ var _bkd=dd.booked||{}; var cs=dd.courts.filter(function(x){return x.c&&x.c.length;}).map(function(x){return x.h+" "+x.c.map(function(ct){return ct+(_bkd[ct]?" ("+_bkd[ct]+")":"");}).join(" & ");}); if(cs.length) h+='<div class="srain" style="color:var(--cyan)">Courts '+esc(cs.join("  \u00b7  "))+'</div>'; }
+    if(dd.bnote && ORGANIZER){ h+='<div class="srain" style="color:#F4C542;font-size:12px">&#9888; '+esc(dd.bnote)+'</div>'; }
     if(dd.format==="mixed"){ var _g=(dd.men||[]); h+='<div class="srain">Guys: '+(_g.length?esc(_g.join(" & ")):(ORGANIZER?"not set yet":"TBD"))+(ORGANIZER&&CUSTOM_DAYS[dd.id]?' <button class="m-btn" data-act="setGuys" data-id="'+esc(dd.id)+'" style="padding:2px 10px;font-size:12px;margin-left:6px">'+(_g.length?"Change":"Set")+'</button>':"")+'</div>'; }
     if(dd.note) h+='<div class="srain">'+esc(dd.note)+'</div>';
     h+='<div class="sgrid'+(dd.claim?' claim-grid':'')+'">';
