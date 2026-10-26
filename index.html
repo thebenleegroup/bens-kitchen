@@ -755,14 +755,13 @@ function addGameSave(){
   if(end<=start){ var ee=document.getElementById("agEnd"); if(ee) ee.style.borderColor="#FF6B6B"; return; }
   var bySlot={};
   [].forEach.call(document.querySelectorAll(".ag-court"), function(s){ var slot=s.getAttribute("data-slot"); if(!bySlot[slot]) bySlot[slot]=[]; if(s.value) bySlot[slot].push(s.value); });
-  var courts=[]; for(var hr=start; hr<end; hr++){ var slot=hr+"-"+(hr+1)+"pm"; courts.push({h:slot, c:bySlot[slot]||[]}); }
-  var booked={}, _cs=document.querySelectorAll(".ag-court"), _bk=document.querySelectorAll(".ag-book");
-  if(_bk.length){ for(var _i=0;_i<_cs.length;_i++){ var _ct=_cs[_i].value, _nm=((_bk[_i]&&_bk[_i].value)||"").trim(); if(_ct&&_nm) booked[_ct]=_nm; } }
+  var _cs=document.querySelectorAll(".ag-court"), _bk=document.querySelectorAll(".ag-book"), _bBy={};
+  for(var _i=0;_i<_cs.length;_i++){ if(!_cs[_i].value) continue; var _sl=_cs[_i].getAttribute("data-slot"); if(!_bBy[_sl]) _bBy[_sl]=[]; _bBy[_sl].push(((_bk[_i]&&_bk[_i].value)||"").trim()); }
+  var courts=[]; for(var hr=start; hr<end; hr++){ var slot=hr+"-"+(hr+1)+"pm"; var _e={h:slot, c:bySlot[slot]||[]}, _bb=_bBy[slot]||[]; if(_bb.some(function(x){return x;})) _e.b=_bb; courts.push(_e); }
   var bnote=((document.getElementById("agNote")||{}).value||"").trim();
   var timeStr=start+"-"+end+"pm";
   var venue=loc+" · "+timeStr;
   var obj={ day:dayLabel(date), name:fmt.name, venue:venue, claim:true, id:date, cap:fmt.cap, note:"Tap an open spot to claim it", players:[], courts:courts, custom:true, ts:Date.now() };
-  if(Object.keys(booked).length) obj.booked=booked;
   if(bnote) obj.bnote=bnote;
   if(fmt.mixed){ obj.format="mixed"; obj.men=[]; }
   var btn=document.querySelector('[data-act="addGameSave"]'); if(btn){ btn.textContent="Adding…"; btn.disabled=true; }
@@ -870,7 +869,7 @@ function renderSchedule(){
     }
     h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span>'+(ORGANIZER&&CUSTOM_DAYS[dd.id]?'<button class="pend-x" data-act="delGame" data-id="'+esc(dd.id)+'" aria-label="remove game">&#215;</button>':'')+'<span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
     h+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
-    if(dd.courts && dd.courts.length){ var _bkd=dd.booked||{}; var cs=dd.courts.filter(function(x){return x.c&&x.c.length;}).map(function(x){return x.h+" "+x.c.map(function(ct){return ct+(_bkd[ct]?" ("+_bkd[ct]+")":"");}).join(" & ");}); if(cs.length) h+='<div class="srain" style="color:var(--cyan)">Courts '+esc(cs.join("  \u00b7  "))+'</div>'; }
+    if(dd.courts && dd.courts.length){ var _bkd=dd.booked||{}; var cs=dd.courts.filter(function(x){return x.c&&x.c.length;}).map(function(x){return x.h+" "+x.c.map(function(ct,ci){var by=(x.b&&x.b[ci])||_bkd[ct]||"";return ct+(by?" ("+by+")":"");}).join(" & ");}); if(cs.length) h+='<div class="srain" style="color:var(--cyan)">Courts '+esc(cs.join("  \u00b7  "))+'</div>'; }
     if(dd.bnote && ORGANIZER){ h+='<div class="srain" style="color:#F4C542;font-size:12px">&#9888; '+esc(dd.bnote)+'</div>'; }
     if(dd.format==="mixed"){ var _g=(dd.men||[]); h+='<div class="srain">Guys: '+(_g.length?esc(_g.join(" & ")):(ORGANIZER?"not set yet":"TBD"))+(ORGANIZER&&CUSTOM_DAYS[dd.id]?' <button class="m-btn" data-act="setGuys" data-id="'+esc(dd.id)+'" style="padding:2px 10px;font-size:12px;margin-left:6px">'+(_g.length?"Change":"Set")+'</button>':"")+'</div>'; }
     if(dd.note) h+='<div class="srain">'+esc(dd.note)+'</div>';
