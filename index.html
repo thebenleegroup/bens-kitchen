@@ -879,7 +879,7 @@ function renderSchedule(){
     card+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span>'+(ORGANIZER&&CUSTOM_DAYS[dd.id]?'<button class="pend-x" data-act="delGame" data-id="'+esc(dd.id)+'" aria-label="remove game">&#215;</button>':'')+'<span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
     card+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
     if(dd.courts && dd.courts.length){ var _bkd=dd.booked||{}; var cs=dd.courts.filter(function(x){return x.c&&x.c.length;}).map(function(x){return x.h+" "+x.c.map(function(ct,ci){var by=(x.b&&x.b[ci])||_bkd[ct]||"";return ct+(by?" ("+by+")":"");}).join(" & ");}); if(cs.length) card+='<div class="srain" style="color:var(--cyan)">Courts '+esc(cs.join("  \u00b7  "))+'</div>'; }
-    if(dd.bnote && ORGANIZER){ card+='<div class="srain" style="color:#F4C542;font-size:12px">&#9888; '+esc(dd.bnote)+'</div>'; }
+    if(dd.bnote){ card+='<div class="srain" style="color:#F4C542;font-size:12px">&#9888; '+esc(dd.bnote)+'</div>'; }
     if(dd.format==="mixed"){ var _g=(dd.men||[]); card+='<div class="srain">Guys: '+(_g.length?esc(_g.join(" & ")):(ORGANIZER?"not set yet":"TBD"))+(ORGANIZER&&CUSTOM_DAYS[dd.id]?' <button class="m-btn" data-act="setGuys" data-id="'+esc(dd.id)+'" style="padding:2px 10px;font-size:12px;margin-left:6px">'+(_g.length?"Change":"Set")+'</button>':"")+'</div>'; }
     if(dd.note) card+='<div class="srain">'+esc(dd.note)+'</div>';
     card+='<div class="sgrid'+(dd.claim?' claim-grid':'')+'">';
