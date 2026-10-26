@@ -897,7 +897,7 @@ function renderSchedule(){
     if(dt && dt>=nextMon){ fut+=card; futCount++; } else { cur+=card; }
   });
   h+=cur;
-  if(futCount){ h+='<details class="wkmore"><summary class="wkmore-s">Upcoming weeks ('+futCount+')</summary><div class="wkmore-b">'+fut+'</div></details>'; }
+  if(futCount){ h+='<details class="wkmore"><summary class="wkmore-s">Upcoming Sessions ('+futCount+')</summary><div class="wkmore-b">'+fut+'</div></details>'; }
   if(!shown){ h+='<div class="court" style="margin-bottom:12px;text-align:center;color:var(--mut)"><div class="disp" style="font-size:22px;color:var(--ink)">No games on the calendar</div><div style="font-size:13px;margin-top:4px">New sessions will show up here. DM @benlee.ig to get on the next one.</div></div>'; }
   h+='<div class="rules"><div style="font-size:20px;font-weight:800;color:var(--lime)">Venmo $6 to @benjamintwl to confirm your spot</div><div style="font-size:13px;color:var(--mut);margin-top:4px">Stay tuned for upcoming spots · DM @benlee.ig for the waitlist</div></div>';
   h+=a2hsHTML();
