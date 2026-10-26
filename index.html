@@ -249,6 +249,12 @@ body {
 .a2hs-t{font-size:13px;color:var(--mut);margin-bottom:8px}
 .a2hs-s{font-size:13px;color:var(--ink);margin-top:3px}
 .a2hs-s b{color:var(--ink)}
+.wkmore{margin:4px 0 12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+.wkmore-s{list-style:none;cursor:pointer;padding:15px 16px;font-weight:800;font-size:14px;color:var(--ink);display:flex;align-items:center;gap:9px}
+.wkmore-s::-webkit-details-marker{display:none}
+.wkmore-s::before{content:"\25B8";color:var(--lime);font-size:12px;transition:transform .2s}
+.wkmore[open] .wkmore-s::before{transform:rotate(90deg)}
+.wkmore-b{padding:2px 12px 2px}
 </style>
 </head>
 <body>
@@ -854,10 +860,13 @@ function renderSchedule(){
   h+=bannerHTML();
   if(ORGANIZER){ h+='<div style="margin-bottom:12px"><button class="m-btn" data-act="addGame" style="width:100%">&#43; Add a game</button></div>'; }
   var today=new Date(); today.setHours(0,0,0,0);
-  var shown=0;
+  var _dw=today.getDay(), _om=(_dw===0?6:_dw-1);
+  var nextMon=new Date(today); nextMon.setDate(nextMon.getDate()-_om+7); nextMon.setHours(0,0,0,0);
+  var shown=0, cur='', fut='', futCount=0;
   Wk.days.forEach(function(dd){
     var dt=dayDate(dd); if(dt && dt<today) return; // drop past days
     shown++;
+    var card='';
     var confirmed=dd.players||[], sConfirmed=[], sPending=[], open=0, pill=dd.status, pillFull=(dd.status==="FULL");
     if(dd.claim){
       var conKeys={}; confirmed.forEach(function(p){ if(p.h) conKeys[hkey(p.h)]=1; });
@@ -867,25 +876,28 @@ function renderSchedule(){
       open=Math.max(0,cap-inCount-heldPending);
       pill=inCount+"/"+cap+" IN"; pillFull=(open===0&&heldPending===0);
     }
-    h+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span>'+(ORGANIZER&&CUSTOM_DAYS[dd.id]?'<button class="pend-x" data-act="delGame" data-id="'+esc(dd.id)+'" aria-label="remove game">&#215;</button>':'')+'<span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
-    h+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
-    if(dd.courts && dd.courts.length){ var _bkd=dd.booked||{}; var cs=dd.courts.filter(function(x){return x.c&&x.c.length;}).map(function(x){return x.h+" "+x.c.map(function(ct,ci){var by=(x.b&&x.b[ci])||_bkd[ct]||"";return ct+(by?" ("+by+")":"");}).join(" & ");}); if(cs.length) h+='<div class="srain" style="color:var(--cyan)">Courts '+esc(cs.join("  \u00b7  "))+'</div>'; }
-    if(dd.bnote && ORGANIZER){ h+='<div class="srain" style="color:#F4C542;font-size:12px">&#9888; '+esc(dd.bnote)+'</div>'; }
-    if(dd.format==="mixed"){ var _g=(dd.men||[]); h+='<div class="srain">Guys: '+(_g.length?esc(_g.join(" & ")):(ORGANIZER?"not set yet":"TBD"))+(ORGANIZER&&CUSTOM_DAYS[dd.id]?' <button class="m-btn" data-act="setGuys" data-id="'+esc(dd.id)+'" style="padding:2px 10px;font-size:12px;margin-left:6px">'+(_g.length?"Change":"Set")+'</button>':"")+'</div>'; }
-    if(dd.note) h+='<div class="srain">'+esc(dd.note)+'</div>';
-    h+='<div class="sgrid'+(dd.claim?' claim-grid':'')+'">';
+    card+='<div class="court" style="margin-bottom:12px"><div class="ctop"><span class="ctag" style="color:var(--lime)">'+esc(dd.day)+'</span>'+(ORGANIZER&&CUSTOM_DAYS[dd.id]?'<button class="pend-x" data-act="delGame" data-id="'+esc(dd.id)+'" aria-label="remove game">&#215;</button>':'')+'<span class="spill'+(pillFull?" full":"")+'">'+esc(pill)+'</span></div>';
+    card+='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px"><span class="disp" style="font-size:24px">'+esc(dd.name)+'</span><span class="cnote" style="white-space:nowrap">'+esc(dd.venue)+'</span></div>';
+    if(dd.courts && dd.courts.length){ var _bkd=dd.booked||{}; var cs=dd.courts.filter(function(x){return x.c&&x.c.length;}).map(function(x){return x.h+" "+x.c.map(function(ct,ci){var by=(x.b&&x.b[ci])||_bkd[ct]||"";return ct+(by?" ("+by+")":"");}).join(" & ");}); if(cs.length) card+='<div class="srain" style="color:var(--cyan)">Courts '+esc(cs.join("  \u00b7  "))+'</div>'; }
+    if(dd.bnote && ORGANIZER){ card+='<div class="srain" style="color:#F4C542;font-size:12px">&#9888; '+esc(dd.bnote)+'</div>'; }
+    if(dd.format==="mixed"){ var _g=(dd.men||[]); card+='<div class="srain">Guys: '+(_g.length?esc(_g.join(" & ")):(ORGANIZER?"not set yet":"TBD"))+(ORGANIZER&&CUSTOM_DAYS[dd.id]?' <button class="m-btn" data-act="setGuys" data-id="'+esc(dd.id)+'" style="padding:2px 10px;font-size:12px;margin-left:6px">'+(_g.length?"Change":"Set")+'</button>':"")+'</div>'; }
+    if(dd.note) card+='<div class="srain">'+esc(dd.note)+'</div>';
+    card+='<div class="sgrid'+(dd.claim?' claim-grid':'')+'">';
     confirmed.forEach(function(p){
-      if(p.v){ h+='<div class="schip vac"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>'; }
-      else if(p.pending){ h+='<div class="schip pend">'+pendAva({handle:p.h},{name:p.n,photo:PHOTOS[p.p||p.n]||null})+'<div style="min-width:0;flex:1"><div class="sn">'+esc(p.n)+'</div><div class="sh">'+esc(p.h)+'</div></div><span class="pendtag">Pending</span></div>'; }
-      else { h+='<div class="schip">'+schedAva(p)+'<div style="min-width:0"><div class="sn">'+esc(p.n)+'</div><div class="sh">'+esc(p.h)+'</div></div></div>'; }
+      if(p.v){ card+='<div class="schip vac"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>'; }
+      else if(p.pending){ card+='<div class="schip pend">'+pendAva({handle:p.h},{name:p.n,photo:PHOTOS[p.p||p.n]||null})+'<div style="min-width:0;flex:1"><div class="sn">'+esc(p.n)+'</div><div class="sh">'+esc(p.h)+'</div></div><span class="pendtag">Pending</span></div>'; }
+      else { card+='<div class="schip">'+schedAva(p)+'<div style="min-width:0"><div class="sn">'+esc(p.n)+'</div><div class="sh">'+esc(p.h)+'</div></div></div>'; }
     });
-    sConfirmed.forEach(function(s){ h+=sigChip(dd.id,s); });
-    sPending.forEach(function(s){ h+=sigChip(dd.id,s); });
+    sConfirmed.forEach(function(s){ card+=sigChip(dd.id,s); });
+    sPending.forEach(function(s){ card+=sigChip(dd.id,s); });
     for(var oi=0; oi<open; oi++){
-      h+='<div class="schip vac" data-act="claim" data-event="'+esc(dd.id)+'"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>';
+      card+='<div class="schip vac" data-act="claim" data-event="'+esc(dd.id)+'"><span class="ava vac">+</span><div style="min-width:0"><div class="sn">Open</div><div class="sh">Tap to claim</div></div></div>';
     }
-    h+='</div></div>';
+    card+='</div></div>';
+    if(dt && dt>=nextMon){ fut+=card; futCount++; } else { cur+=card; }
   });
+  h+=cur;
+  if(futCount){ h+='<details class="wkmore"><summary class="wkmore-s">Upcoming weeks ('+futCount+')</summary><div class="wkmore-b">'+fut+'</div></details>'; }
   if(!shown){ h+='<div class="court" style="margin-bottom:12px;text-align:center;color:var(--mut)"><div class="disp" style="font-size:22px;color:var(--ink)">No games on the calendar</div><div style="font-size:13px;margin-top:4px">New sessions will show up here. DM @benlee.ig to get on the next one.</div></div>'; }
   h+='<div class="rules"><div style="font-size:20px;font-weight:800;color:var(--lime)">Venmo $6 to @benjamintwl to confirm your spot</div><div style="font-size:13px;color:var(--mut);margin-top:4px">Stay tuned for upcoming spots · DM @benlee.ig for the waitlist</div></div>';
   h+=a2hsHTML();
@@ -893,7 +905,7 @@ function renderSchedule(){
   startHero();
 }
 // ---- Claim a spot ----
-var VENMO_URL="https://venmo.com/benjamintwl";
+var VENMO_URL="https://venmo.com/benjamintwl?txn=pay&amount=6&note=Pickleball";
 function dayById(id){ for(var i=0;i<SCHEDULE_WEEK.days.length;i++){ if(SCHEDULE_WEEK.days[i].id===id) return SCHEDULE_WEEK.days[i]; } return null; }
 function showModal(html){ var r=document.getElementById("modalRoot"); r.innerHTML='<div class="modal-bg" data-act="claimCancel"></div><div class="modal">'+html+'</div>'; r.style.display="block"; }
 function closeModal(){ var r=document.getElementById("modalRoot"); r.style.display="none"; r.innerHTML=""; }
@@ -979,7 +991,7 @@ function claimProceed(){
     '<div class="m-h">Almost in, '+esc(handle)+'</div>'+
     '<div class="m-note">'+msg+'</div>'+
     '<div class="m-step"><span class="m-num">1</span> Venmo <b>$6</b> to <b>@benjamintwl</b> to confirm your spot.</div>'+
-    '<button class="m-btn venmo" data-act="claimVenmo">Open Venmo</button>'+
+    '<button class="m-btn venmo" data-act="claimVenmo">Venmo $6 to @benjamintwl</button>'+
     '<div class="m-step" style="margin-top:14px"><span class="m-num">2</span> Add yourself to the roster. You\u2019ll show as pending until Ben confirms.</div>'+
     '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Cancel</button><button class="m-btn" data-act="claimAdd">Add me</button></div>'
   );
@@ -1012,7 +1024,9 @@ function claimDone(d,handle){
   showModal(
     '<div class="m-h">You’re on the list!</div>'+
     '<div class="m-note"><b>'+esc(handle)+'</b> is pending for '+esc(d.day)+' · '+esc(d.name)+'. Your spot locks in once Ben confirms your Venmo.</div>'+
-    '<div class="m-row"><button class="m-btn" data-act="claimCancel">Done</button></div>'
+    '<div class="m-step"><span class="m-num">!</span> Last step: Venmo <b>$6</b> to <b>@benjamintwl</b> now so Ben can lock you in.</div>'+
+    '<button class="m-btn venmo" data-act="claimVenmo">Venmo $6 to @benjamintwl</button>'+
+    '<div class="m-row"><button class="m-btn ghost" data-act="claimCancel">Done</button></div>'
   );
 }
 function signupId(){ return "s"+Date.now()+Math.floor(Math.random()*1000); }
