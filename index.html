@@ -661,9 +661,10 @@ function sigAvaColor(s,pf){ var ph=pf&&pf.photo;
 }
 function sigChip(evId,s){
   var pf=photoForHandle(s.handle), nm=(pf&&pf.name)||s.name||s.handle, confirmed=(s.pending===false);
+  var disp=(pf&&pf.name&&PLAYERS[pf.name]&&PLAYERS[pf.name].handle)||s.handle; // show current roster handle, not an old one signed up under
   var ava=confirmed?sigAvaColor(s,pf):pendAva(s,pf);
-  var dup=(hkey(nm)===hkey(s.handle)); // no name distinct from handle
-  var txt='<div style="min-width:0;flex:1"><div class="sn">'+esc(nm)+'</div>'+(dup?'':'<div class="sh">'+esc(s.handle)+'</div>')+'</div>';
+  var dup=(hkey(nm)===hkey(disp)); // no name distinct from handle
+  var txt='<div style="min-width:0;flex:1"><div class="sn">'+esc(nm)+'</div>'+(dup?'':'<div class="sh">'+esc(disp)+'</div>')+'</div>';
   var tag=confirmed?'':'<span class="pendtag">Pending</span>';
   var btns='';
   if(ORGANIZER){
