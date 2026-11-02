@@ -364,7 +364,7 @@ function rrSchedule(P){
 }
 // Season strength, used to seed the 8-player draw so games are balanced.
 // Manual seeding for players not yet on the leaderboard (keeps the 8-player draw balanced).
-var STRENGTH_OVERRIDE = { "Bo": {w:18,diff:55,nw:0}, "Kwan": {w:16,diff:30,nw:0} };
+var STRENGTH_OVERRIDE = { "Bo": {w:18,diff:55,nw:0}, "Kwan": {w:16,diff:30,nw:0}, "Ankur": {w:37,diff:-80,nw:0}, "Thuy": {w:14,diff:-171,nw:0} };
 function playerStrength(name){
   if(STRENGTH_OVERRIDE[name]) return STRENGTH_OVERRIDE[name];
   for(var i=0;i<SEASON.length;i++){ if(SEASON[i].name===name){ return {w:SEASON[i].w||0,diff:SEASON[i].diff||0,nw:SEASON[i].nw||0}; } }
