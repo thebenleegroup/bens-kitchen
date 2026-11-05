@@ -414,10 +414,12 @@ function genMixed(day, P){
   blocks.forEach(function(bk){ for(var g=0; g<4; g++){ sch.push({ r:r, label:'Game '+r, courts:[[bk[0],bk[1]]] }); r++; } });
   return sch;
 }
+function gameDayArrived(day){ var dt=day&&dayDate(day); if(!dt) return false; dt.setHours(0,0,0,0); var t=new Date(); t.setHours(0,0,0,0); return dt.getTime()<=t.getTime(); }
 function buildSchedule(day){
   if(day && day.games && day.games.length) return day.games;
-  if(!rosterFull(day)) return []; // still filling -> PENDING
   var P=activeRoster(day||{});
+  // Full by cap, OR it's game day and a playable number showed up (a short night still runs on one court).
+  if(!(rosterFull(day) || (gameDayArrived(day) && (P.length===4 || P.length===8)))) return []; // still filling -> PENDING
   if(day && day.format==="mixed") return genMixed(day, P);
   if(P.length===4) return rrSchedule(P); // standard 4-player format: 6 round-robin + finale (1+4 vs 2+3)
   if(P.length===8) return gen8(P); // standard 8-player format: 7 rounds, partner everyone once, leaderboard-balanced
