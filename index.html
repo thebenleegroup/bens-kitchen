@@ -443,6 +443,9 @@ function genTeamRR(teams){
       sch.push({r:r++, grp:g, label:'Court 2', courts:[[ teams[cfg[1][0]], teams[cfg[1][1]] ]]});
     });
   }
+  // Round 7 finale, seeded by record once the 12 round-robin games are final: 1st vs 2nd for the title, 3rd vs 4th for third.
+  sch.push({r:r++, grp:7, final:true, fkind:'champ', courts:[[["?","?"],["?","?"]]]});
+  sch.push({r:r++, grp:7, final:true, fkind:'third', courts:[[["?","?"],["?","?"]]]});
   return sch;
 }
 function gameDayArrived(day){ var dt=day&&dayDate(day); if(!dt) return false; dt.setHours(0,0,0,0); var t=new Date(); t.setHours(0,0,0,0); return dt.getTime()<=t.getTime(); }
@@ -573,12 +576,61 @@ function standings(){
   if(ft&&fr){ var fg=state[gid(fr.r,1)]; if(isDone(fg)) tally(t,ft[0],ft[1],fg); }
   return sortRows(t);
 }
+// ---- Fixed-partners (teamrr) team standings ----
+function teamsList(){ return teamsFor(ACTIVE_DAY||{}).filter(function(t){return t.length===2;}); }
+function tkey(pair){ return pair.slice().sort().join("|"); }
+function blankTeamRows(){ var tl=teamsList(), rows=[]; tl.forEach(function(pair,i){ rows.push({idx:i,label:"Team "+(i+1),members:pair.slice(),w:0,l:0,pf:0,pa:0,diff:0}); }); return rows; }
+function tallyTeam(rows,sideA,sideB,g){ var m={}; rows.forEach(function(r){m[tkey(r.members)]=r;});
+  var ra=m[tkey(sideA)], rb=m[tkey(sideB)]; if(!ra||!rb) return; var aw=g.a>g.b;
+  ra.pf+=g.a; ra.pa+=g.b; aw?ra.w++:ra.l++; rb.pf+=g.b; rb.pa+=g.a; aw?rb.l++:rb.w++; }
+function sortTeamRows(rows){ rows.forEach(function(r){r.diff=r.pf-r.pa;});
+  rows.sort(function(x,y){return y.w-x.w||y.diff-x.diff||y.pf-x.pf||x.idx-y.idx;}); return rows; }
+function teamRegStandings(){ var rows=blankTeamRows();
+  regGames().forEach(function(rd){ var g=state[gid(rd.r,1)]; if(isDone(g)) tallyTeam(rows,rd.courts[0][0],rd.courts[0][1],g); });
+  return sortTeamRows(rows); }
+function teamRegAllDone(){ var rg=regGames(); return rg.length>0 && rg.every(function(rd){ return isDone(state[gid(rd.r,1)]); }); }
+// Finale seeds once the round robin is final: {champ:[1st,2nd], third:[3rd,4th]} (each a member pair), else null.
+function teamFinalTeams(){ if(!teamRegAllDone()) return null; var s=teamRegStandings(); if(s.length<4) return null;
+  return { champ:[s[0].members,s[1].members], third:[s[2].members,s[3].members] }; }
+function finaleRounds(){ return SCHEDULE.filter(function(r){return r.final;}); }
+function isFinaleId(id){ return finaleRounds().some(function(rd){ return gid(rd.r,1)===id; }); }
+function teamStandings(){ var rows=blankTeamRows();
+  regGames().forEach(function(rd){ var g=state[gid(rd.r,1)]; if(isDone(g)) tallyTeam(rows,rd.courts[0][0],rd.courts[0][1],g); });
+  var tf=teamFinalTeams();
+  if(tf){ finaleRounds().forEach(function(rd){ var g=state[gid(rd.r,1)]; if(!isDone(g)) return; var pr=(rd.fkind==='champ')?tf.champ:tf.third; tallyTeam(rows,pr[0],pr[1],g); }); }
+  return sortTeamRows(rows); }
+function isTeamRR(){ return !!(ACTIVE_DAY && ACTIVE_DAY.format==="teamrr"); }
 function playedCount(){ var p=0; SCHEDULE.forEach(function(rd){rd.courts.forEach(function(c,ci){ if(isDone(state[gid(rd.r,ci+1)]))p++; });}); return p; }
 function updateCount(){ document.getElementById("count").textContent=playedCount()+"/"+TOTAL; }
 
+function renderTeamStandings(){
+  var rows=teamStandings(), played=playedCount(), any=played>0, lead=rows[0], h="";
+  if(any && lead){
+    h+='<div class="champ"><div class="champ-crown">&#128081;</div>'+
+       '<span class="avs champ-avs">'+avatar(lead.members[0],54)+avatar(lead.members[1],54)+'</span>'+
+       '<div class="champ-info"><div class="champ-lead">Leading</div><div class="champ-name">'+esc(lead.label)+'</div>'+
+       '<div class="champ-sub">'+esc(lead.members[0])+' + '+esc(lead.members[1])+' &middot; '+lead.w+(lead.w===1?' win':' wins')+'</div></div>'+
+       '<div class="champ-w"><b>'+lead.w+'</b><small>W</small></div></div>';
+  } else {
+    h+='<div class="empty"><div class="ball">&#129362;</div><p>No games logged yet.</p><p class="sub">Tap in scores on the Games tab. Team standings update here for everyone, and they seed the round 7 finale.</p></div>';
+  }
+  h+='<div class="board"><div class="brow head"><span class="l">#</span><span class="l">Team</span><span>GP</span><span>W</span><span>L</span><span>Diff</span></div>';
+  rows.forEach(function(s,i){
+    var top=(i===0&&any)?" top":"";
+    h+='<div class="brow'+top+'"><span class="rk">'+(i+1)+'</span>'+
+       '<span class="pl"><span class="avs">'+avatar(s.members[0],32)+avatar(s.members[1],32)+'</span>'+
+       '<span class="nm"><span class="n1">'+esc(s.members[0])+' + '+esc(s.members[1])+'</span><span class="n2">'+esc(s.label)+'</span></span></span>'+
+       '<span class="st">'+(s.w+s.l)+'</span><span class="st w">'+s.w+'</span><span class="st">'+s.l+'</span>'+
+       '<span class="st '+(s.diff>0?"pos":s.diff<0?"neg":"")+'">'+(s.diff>0?"+":"")+s.diff+'</span></div>';
+  });
+  h+='</div>';
+  h+='<div class="rules"><p class="rtxt"><b style="color:var(--ink)">Format.</b> Double round robin, fixed partners. Each team plays every other team twice (12 games over 6 rounds). Standings seed the round 7 finale: 1st vs 2nd for the title, 3rd vs 4th for third.</p><p class="rtxt" style="margin-top:8px">1 point per game won. Ties broken by point differential, then total points scored.</p></div>';
+  return h;
+}
 function renderStandings(){
   if(SESSION.state==="pending"){ document.getElementById("view").innerHTML=pendingHTML("lineup"); return; }
   if(SESSION.state==="finalizing"){ document.getElementById("view").innerHTML=finalizingHTML("lineup"); return; }
+  if(isTeamRR()){ document.getElementById("view").innerHTML=renderTeamStandings(); return; }
   var rows=standings(), played=playedCount(), lead=rows[0], any=played>0, h="";
   if(any){
     h+='<div class="champ"><div class="champ-crown">&#128081;</div>'+avatar(lead.name,64)+
@@ -632,6 +684,18 @@ function finaleCardHTML(){
     '<div class="finale-msg">The 1st &amp; 4th seeds team up against the 2nd &amp; 3rd. Finish the first 6 games and the matchup locks in right here.</div></div>';
   return gameCardHTML(id,'&#128081; THE FINALE','#F4C542',ft[0],ft[1],'finale','finale-tag','1ST + 4TH  vs  2ND + 3RD');
 }
+function teamFinaleCardHTML(rd){
+  var id=gid(rd.r,1), tf=teamFinalTeams(), champ=(rd.fkind==='champ');
+  var tag=champ?'&#127942; CHAMPIONSHIP':'&#129353; 3RD PLACE', accent=champ?'#F4C542':'#CD7F32';
+  if(!tf){ var msg=champ
+      ? 'The top two teams by record play for 1st. Finish all 12 round robin games and the matchup locks in right here.'
+      : 'The 3rd and 4th place teams play for the bronze. Locks in once the round robin wraps.';
+    return '<div class="court finale locked" id="card-'+id+'">'+
+      '<div class="ctop"><span class="ctag finale-tag" style="color:'+accent+'">'+tag+'</span><span class="cnote">Teams set after the round robin</span></div>'+
+      '<div class="finale-msg">'+msg+'</div></div>'; }
+  var pair=champ?tf.champ:tf.third, sub=champ?'#1 SEED  vs  #2 SEED':'#3 SEED  vs  #4 SEED';
+  return gameCardHTML(id,tag,accent,pair[0],pair[1],'finale','finale-tag',sub);
+}
 function renderGames(){
   var h="";
   if(!SCHEDULE.length){
@@ -642,7 +706,7 @@ function renderGames(){
   SCHEDULE.forEach(function(rd){
     if(rd.grp && rd.grp!==lastGrp){ lastGrp=rd.grp; h+='<div style="font:800 12px/1 system-ui;letter-spacing:1.6px;color:var(--cyan);margin:'+(lastGrp===rd.grp&&rd.grp===1?'2px':'20px')+' 2px 8px;text-transform:uppercase">Round '+rd.grp+'</div>'; }
     h+='<div class="round">';
-    if(rd.final){ h+=finaleCardHTML(); }
+    if(rd.final){ h+=isTeamRR()?teamFinaleCardHTML(rd):finaleCardHTML(); }
     else { h+=gameCardHTML(gid(rd.r,1),rd.label||('Game '+rd.r),'#C6F432',rd.courts[0][0],rd.courts[0][1],'','',null); }
     h+='</div>';
   });
@@ -667,7 +731,7 @@ function updateCard(id){
   var na=document.getElementById("num-"+id+"-a"), nb=document.getElementById("num-"+id+"-b");
   if(na && document.activeElement!==na) na.value=a; if(nb && document.activeElement!==nb) nb.value=b;
   ra.className="trow"+(done&&a>b?" win":""); rb.className="trow"+(done&&b>a?" win":"");
-  var fr=finalRound(), isFin=(fr&&id===gid(fr.r,1));
+  var isFin=isFinaleId(id);
   card.className="court"+(isFin?" finale":"")+(done?" done":"");
   var note=document.getElementById("note-"+id);
   if(done){ note.className="cnote fin"; note.textContent="Final"; }
@@ -675,11 +739,13 @@ function updateCard(id){
   else { note.className="cnote"; note.textContent="Not logged yet"; }
 }
 function refreshFinale(){
-  var fr=finalRound(); if(!fr) return;
-  var id=gid(fr.r,1), cur=document.getElementById("card-"+id); if(!cur) return;
-  var tmp=document.createElement("div"); tmp.innerHTML=finaleCardHTML();
-  cur.parentNode.replaceChild(tmp.firstChild,cur);
-  updateCard(id);
+  var rounds=isTeamRR()?finaleRounds():(finalRound()?[finalRound()]:[]);
+  rounds.forEach(function(fr){
+    var id=gid(fr.r,1), cur=document.getElementById("card-"+id); if(!cur) return;
+    var tmp=document.createElement("div"); tmp.innerHTML=isTeamRR()?teamFinaleCardHTML(fr):finaleCardHTML();
+    cur.parentNode.replaceChild(tmp.firstChild,cur);
+    updateCard(id);
+  });
 }
 
 function seasonAva(r,size){ var ph=photoForName(r.name);
@@ -1442,7 +1508,7 @@ function render(){
 }
 function onScore(id,a,b){
   state[id]={a:a,b:b,ts:Date.now()};
-  if(tab==="games"){ updateCard(id); var fr=finalRound(); if(!fr||id!==gid(fr.r,1)) refreshFinale(); updateUploadBtn(); }
+  if(tab==="games"){ updateCard(id); if(!isFinaleId(id)) refreshFinale(); updateUploadBtn(); }
   else renderStandings();
   updateCount();
   clearTimeout(saveTimers[id]);
