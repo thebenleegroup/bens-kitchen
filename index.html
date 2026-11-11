@@ -1281,6 +1281,15 @@ function sessionWinners(rows){
   for(var i=1;i<rows.length;i++){ if(rows[i].w===t.w && rows[i].diff===t.diff) w.push(rows[i]); else break; }
   return w;
 }
+// Fixed-partners night winner: the team that wins the round-7 championship (that game plays for 1st place).
+function teamNightWinners(rows){
+  var tf=teamFinalTeams(); if(!tf) return sessionWinners(rows);
+  var champ=finaleRounds().filter(function(r){return r.fkind==="champ";})[0]; if(!champ) return sessionWinners(rows);
+  var g=state[gid(champ.r,1)]; if(!isDone(g)) return sessionWinners(rows);
+  var pair=(g.a>g.b)?tf.champ[0]:tf.champ[1], by={}; rows.forEach(function(r){by[r.name]=r;});
+  var w=pair.map(function(n){return by[n];}).filter(Boolean);
+  return w.length?w:sessionWinners(rows);
+}
 function fmtDate(iso){ try{ var d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("en-US",{month:"short",day:"numeric"}); }catch(e){ return iso; } }
 function uploadNight(){
   if(!DB){ alert("Syncing is off, so this can't be saved for everyone. Open the synced link first."); return; }
@@ -1291,7 +1300,7 @@ function uploadNight(){
     if(!confirm("This night looks like it was already uploaded. Upload again anyway? (this will double-count it)")) return;
   }
   if(!confirm("Final check: save "+SESSION.label+" at "+SESSION.loc+" on "+fmtDate(SESSION.date)+" and clear the scoreboard for the next night?")) return;
-  var rows=standings(), winners=sessionWinners(rows);
+  var rows=standings(), winners=isTeamRR()?teamNightWinners(rows):sessionWinners(rows);
   var ftm=finalTeams(), tf=isTeamRR()?teamFinalTeams():null;
   var games=[]; SCHEDULE.forEach(function(rd){ var g=state[gid(rd.r,1)]; if(!isDone(g)) return;
     var A=rd.courts[0][0], B=rd.courts[0][1];
