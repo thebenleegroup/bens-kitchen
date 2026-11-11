@@ -572,8 +572,14 @@ function finalTeams(){ if(!regAllDone()) return null; var s=regStandings(); if(s
 function standings(){
   var t={}, ip=seedPlayers(); for(var n in ip) t[n]={name:n,w:0,l:0,pf:0,pa:0};
   regGames().forEach(function(rd){ var g=state[gid(rd.r,1)]; if(isDone(g)) tally(t,rd.courts[0][0],rd.courts[0][1],g); });
-  var ft=finalTeams(), fr=finalRound();
-  if(ft&&fr){ var fg=state[gid(fr.r,1)]; if(isDone(fg)) tally(t,ft[0],ft[1],fg); }
+  if(isTeamRR()){
+    // Fixed-partners finale: credit each of the two round-7 games to its correctly seeded team pair.
+    var tf=teamFinalTeams();
+    if(tf){ finaleRounds().forEach(function(rd){ var g=state[gid(rd.r,1)]; if(!isDone(g)) return; var pr=(rd.fkind==='champ')?tf.champ:tf.third; tally(t,pr[0],pr[1],g); }); }
+  } else {
+    var ft=finalTeams(), fr=finalRound();
+    if(ft&&fr){ var fg=state[gid(fr.r,1)]; if(isDone(fg)) tally(t,ft[0],ft[1],fg); }
+  }
   return sortRows(t);
 }
 // ---- Fixed-partners (teamrr) team standings ----
@@ -1286,10 +1292,11 @@ function uploadNight(){
   }
   if(!confirm("Final check: save "+SESSION.label+" at "+SESSION.loc+" on "+fmtDate(SESSION.date)+" and clear the scoreboard for the next night?")) return;
   var rows=standings(), winners=sessionWinners(rows);
-  var ftm=finalTeams();
+  var ftm=finalTeams(), tf=isTeamRR()?teamFinalTeams():null;
   var games=[]; SCHEDULE.forEach(function(rd){ var g=state[gid(rd.r,1)]; if(!isDone(g)) return;
     var A=rd.courts[0][0], B=rd.courts[0][1];
-    if(rd.final && ftm){ A=ftm[0]; B=ftm[1]; } // store the real finale teams, not the ?/? placeholder
+    // store the real finale teams, never the ?/? placeholder
+    if(rd.final){ if(tf){ var pr=(rd.fkind==='champ')?tf.champ:tf.third; A=pr[0]; B=pr[1]; } else if(ftm){ A=ftm[0]; B=ftm[1]; } }
     games.push({a:A,b:B,sa:g.a,sb:g.b,fin:!!rd.final}); });
   var entry={date:SESSION.date,loc:SESSION.loc,label:SESSION.label,
     winners:winners.map(function(r){return r.name;}),
