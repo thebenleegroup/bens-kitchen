@@ -351,8 +351,7 @@ function activeDay(){
   // earliest session today-or-later that has NOT been uploaded yet (so after upload we auto-advance)
   for(var i=0;i<up.length;i++){ if(!dayUploaded(up[i].dd)) return up[i].dd; }
   if(up.length) return up[up.length-1].dd; // everything upcoming already uploaded
-  var lastPast=null; days.forEach(function(dd){ var dt=dayDate(dd); if(!dt) return; if(!lastPast || dayDate(lastPast)<dt) lastPast=dd; });
-  return lastPast||days[0];
+  return null; // nothing today-or-later to play: on break / no active game
 }
 // Everyone who has claimed a spot (confirmed OR pending) plus any base players.
 function activeRoster(day){
@@ -633,7 +632,19 @@ function renderTeamStandings(){
   h+='<div class="rules"><p class="rtxt"><b style="color:var(--ink)">Format.</b> Double round robin, fixed partners. Each team plays every other team twice (12 games over 6 rounds). Standings seed the round 7 finale: 1st vs 2nd for the title, 3rd vs 4th for third.</p><p class="rtxt" style="margin-top:8px">1 point per game won. Ties broken by point differential, then total points scored.</p></div>';
   return h;
 }
+// Empty state for the Lineup/Games tabs when no game is on the board (e.g. a break between nights).
+function noGameHTML(kind){
+  var b=(CUSTOM_BANNER&&CUSTOM_BANNER.headline)?CUSTOM_BANNER:null;
+  if(b){
+    return '<div class="empty"><div class="disp" style="font-size:24px;line-height:1.05">'+esc(b.headline)+'</div>'+
+      (b.footer?'<p class="sub">'+esc(b.footer)+'</p>':'')+
+      '<p class="sub">No games on the board right now. Check the Schedule tab for details.</p></div>';
+  }
+  return '<div class="empty"><div class="ball">&#127955;</div><p>No game on the board right now.</p>'+
+    '<p class="sub">The '+(kind==="games"?"matchups":"lineup")+' show up here once the next night is on the schedule.</p></div>';
+}
 function renderStandings(){
+  if(!ACTIVE_DAY){ document.getElementById("view").innerHTML=noGameHTML("lineup"); return; }
   if(SESSION.state==="pending"){ document.getElementById("view").innerHTML=pendingHTML("lineup"); return; }
   if(SESSION.state==="finalizing"){ document.getElementById("view").innerHTML=finalizingHTML("lineup"); return; }
   if(isTeamRR()){ document.getElementById("view").innerHTML=renderTeamStandings(); return; }
@@ -704,6 +715,7 @@ function teamFinaleCardHTML(rd){
 }
 function renderGames(){
   var h="";
+  if(!ACTIVE_DAY){ document.getElementById("view").innerHTML=noGameHTML("games"); return; }
   if(!SCHEDULE.length){
     document.getElementById("view").innerHTML = (SESSION.state==="pending") ? pendingHTML("games") : finalizingHTML("games");
     return;
