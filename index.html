@@ -1305,12 +1305,14 @@ function uploadNight(){
   var games=[]; SCHEDULE.forEach(function(rd){ var g=state[gid(rd.r,1)]; if(!isDone(g)) return;
     var A=rd.courts[0][0], B=rd.courts[0][1];
     // store the real finale teams, never the ?/? placeholder
-    if(rd.final){ if(tf){ var pr=(rd.fkind==='champ')?tf.champ:tf.third; A=pr[0]; B=pr[1]; } else if(ftm){ A=ftm[0]; B=ftm[1]; } }
-    games.push({a:A,b:B,sa:g.a,sb:g.b,fin:!!rd.final}); });
+    var gameObj={a:A,b:B,sa:g.a,sb:g.b,fin:!!rd.final};
+    if(rd.final && rd.fkind) gameObj.fkind=rd.fkind;
+    games.push(gameObj); });
   var entry={date:SESSION.date,loc:SESSION.loc,label:SESSION.label,
     winners:winners.map(function(r){return r.name;}),
     standings:rows.map(function(r){return {name:r.name,w:r.w,l:r.l,diff:r.diff};}),
     games:games, ts:Date.now()};
+  if(isTeamRR()) entry.format="teamrr";
   var share=winners.length?1/winners.length:0;
   rows.forEach(function(r){
     var row=null,i; for(i=0;i<SEASON.length;i++){ if(SEASON[i].name===r.name){row=SEASON[i];break;} }
@@ -1331,7 +1333,8 @@ function nameAva(name,size){ var ph=photoForName(name), col=(PLAYERS[name]&&PLAY
 }
 // Group photos from 8-player round robins, newest first. Add new ones to the top.
 var GALLERY=[
-  {src:"photos/photo-7.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Ankur", sub:"La Cienega \u00B7 Nov 9th", tag:"Latest", crown:[44,50]},
+  {src:"photos/photo-8.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Brian & Eric", sub:"La Cienega \u00B7 Nov 12th", tag:"Latest", crown:[[41,28],[54,27]]},
+  {src:"photos/photo-7.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Ankur", sub:"La Cienega \u00B7 Nov 9th", crown:[44,50]},
   {src:"photos/photo-6.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jonathan", sub:"La Cienega \u00B7 Nov 2nd", crown:[27,30]},
   {src:"photos/photo-5.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Kwan", sub:"La Cienega \u00B7 Oct 29th", crown:[43,32]},
   {src:"photos/photo-4.jpg", title:"DOUBLE ROUND ROBIN - \uD83D\uDC51 Jonathan", sub:"La Cienega \u00B7 Oct 26th", crown:[55,56]},
@@ -1431,13 +1434,14 @@ function delPhoto(id){
   var finish=function(){ delete CUSTOM_GALLERY[id]; _galleryJson=JSON.stringify(CUSTOM_GALLERY); if(tab==="photos") renderPhotos(); else if(tab==="schedule") renderSchedule(); };
   if(DB) fetch(DB+"/gallery/"+id+".json",{method:"DELETE"}).then(finish).catch(finish); else finish();
 }
+function crownHTML(c){ if(!c) return ''; var arr=Array.isArray(c[0])?c:[c]; return arr.map(function(pos){ return '<span class="crown" style="left:'+pos[0]+'%;top:'+pos[1]+'%">&#128081;</span>'; }).join(''); }
 function renderPhotos(){
   var h='', g=galleryAll();
   if(ORGANIZER) h+='<button class="m-btn addphoto" data-act="addPhoto">+ Add a photo</button>';
   g.forEach(function(p){
     var up=!!p._gid;
     h+='<div class="court photo">'+
-       '<a href="'+esc(p.src)+'" target="_blank" rel="noopener"><img src="'+esc(p.src)+'" alt="Group photo, '+esc(p.sub||p.title||'community')+'" loading="lazy">'+(p.crown?'<span class="crown" style="left:'+p.crown[0]+'%;top:'+p.crown[1]+'%">&#128081;</span>':'')+'</a>'+
+       '<a href="'+esc(p.src)+'" target="_blank" rel="noopener"><img src="'+esc(p.src)+'" alt="Group photo, '+esc(p.sub||p.title||'community')+'" loading="lazy">'+crownHTML(p.crown)+'</a>'+
        (up&&ORGANIZER?'<button class="photo-del" data-act="delPhoto" data-id="'+esc(p._gid)+'" aria-label="Remove photo">&#215;</button>':'')+
        '<div class="pcap"><div><div class="phd">'+esc(p.title||'Ben’s Kitchen')+'</div><div class="psub">'+esc(p.sub||'')+'</div></div>'+
        (p.tag?'<span class="ptag">'+esc(p.tag)+'</span>':'')+'</div>'+
@@ -1509,12 +1513,47 @@ function pastBody(s){
   } else {
     h+='<div class="pnote">Game-by-game scores weren’t recorded for this night.</div>';
   }
-  if(s.standings&&s.standings.length){
+  if(s.format==="teamrr"){
+    var ord=teamPlacement(s);
+    if(ord.length){
+      h+='<div class="pfin"><div class="pfin-h">Final standings</div>';
+      ord.forEach(function(t,i){
+        var medal=i===0?'&#129351;':i===1?'&#129352;':i===2?'&#129353;':(i+1)+'.';
+        h+='<div class="pfin-r"><span class="pfin-left"><span class="pfin-rk">'+medal+'</span><span class="avs">'+nameAva(t.members[0],22)+nameAva(t.members[1],22)+'</span><span>'+esc(t.members[0])+' + '+esc(t.members[1])+'</span></span><span>'+t.w+'-'+t.l+' &middot; '+(t.diff>=0?'+':'')+t.diff+'</span></div>';
+      });
+      h+='</div>';
+    }
+  } else if(s.standings&&s.standings.length){
     h+='<div class="pfin"><div class="pfin-h">'+(((gms&&gms.length)||(s.standings&&s.standings.length>1))?'Final standings':'Winner')+'</div>';
     s.standings.forEach(function(r,i){ h+='<div class="pfin-r"><span class="pfin-left"><span class="pfin-rk">'+(i+1)+'.</span>'+nameAva(r.name,22)+'<span>'+esc(r.name)+'</span></span><span>'+r.w+'-'+r.l+' &middot; '+(r.diff>=0?'+':'')+r.diff+'</span></div>'; });
     h+='</div>';
   }
   return h;
+}
+// Team records and bracket placement from a stored teamrr night's games.
+function teamsFromGames(games){
+  var t={}; function key(p){ return p.slice().sort().join('|'); }
+  function add(pair){ var k=key(pair); if(!t[k]) t[k]={key:k,members:pair.slice(),w:0,l:0,pf:0,pa:0}; return t[k]; }
+  (games||[]).forEach(function(g){
+    if(!g.a||!g.b||(g.a.join('')+g.b.join('')).indexOf('?')>=0) return;
+    var A=add(g.a), B=add(g.b), aw=g.sa>g.sb;
+    A.pf+=g.sa; A.pa+=g.sb; aw?A.w++:A.l++;
+    B.pf+=g.sb; B.pa+=g.sa; aw?B.l++:B.w++;
+  });
+  var arr=[]; for(var k in t){ t[k].diff=t[k].pf-t[k].pa; arr.push(t[k]); }
+  return arr;
+}
+function teamPlacement(s){
+  var teams=teamsFromGames(s.games), byKey={}; teams.forEach(function(t){byKey[t.key]=t;});
+  function key(p){ return p.slice().sort().join('|'); }
+  function side(g,win){ return (g.sa>g.sb)===win ? g.a : g.b; }
+  var champ=(s.games||[]).filter(function(g){return g.fin&&g.fkind==='champ';})[0];
+  var third=(s.games||[]).filter(function(g){return g.fin&&g.fkind==='third';})[0];
+  var order=[];
+  if(champ){ order.push(byKey[key(side(champ,true))]); order.push(byKey[key(side(champ,false))]); }
+  if(third){ order.push(byKey[key(side(third,true))]); order.push(byKey[key(side(third,false))]); }
+  teams.sort(function(x,y){return y.w-x.w||y.diff-x.diff||y.pf-x.pf;}).forEach(function(t){ if(order.indexOf(t)<0) order.push(t); });
+  return order.filter(Boolean);
 }
 function render(){
   rebuildActive();
